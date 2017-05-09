@@ -13,6 +13,10 @@ class LocalUser(models.Model):
     hmac_secret = models.CharField(max_length=140, verbose_name='HMAC пароль')
 
 
+    class Meta:
+        verbose_name = 'Аккаунт LocalBitcoin'
+        verbose_name_plural = 'Аккаунты LocalBitcoin'
+
 class Ad(models.Model):
 
     user = models.ForeignKey(LocalUser, related_name='ads', verbose_name='Пользователь-владелец')
@@ -43,6 +47,9 @@ class Ad(models.Model):
     is_updated = models.BooleanField(verbose_name='Обновлять ли объявление?', default=False)
     current_amount = models.IntegerField()
 
+    class Meta:
+        verbose_name = 'Обьявление'
+        verbose_name_plural = 'Обьявления'
 
     def get_ignored_logins_as_list(self):
         list_of_logins = re.findall(r'([^, ]+)', str(self.ignored_logins))
