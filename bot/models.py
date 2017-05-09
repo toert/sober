@@ -38,9 +38,11 @@ class Ad(models.Model):
     price_rollback = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Откат цены (откат)')
     rollback_time = models.IntegerField(verbose_name='Время отката (T откат) в секундах')
     call_frequency = models.IntegerField(verbose_name='Частота бота в секундах')
-    top_fifteen = models.BooleanField(verbose_name='Топ 15')
+    is_top_fifteen = models.BooleanField(verbose_name='Топ 15')
     is_visible = models.BooleanField(verbose_name='Включено ли объявление?', default=False)
     is_updated = models.BooleanField(verbose_name='Обновлять ли объявление?', default=False)
+    current_amount = models.IntegerField()
+
 
     def get_ignored_logins_as_list(self):
         list_of_logins = re.findall(r'([^, ]+)', str(self.ignored_logins))
@@ -59,6 +61,7 @@ class CurrentInfo(models.Model):
     ad = models.OneToOneField(Ad, db_index=True)
     current_ad_position = models.IntegerField(verbose_name='Текущая позиция')
     current_step = models.IntegerField(verbose_name='Текущий номер шага')
+
 
     def __str__(self):
         return '{}-{}-{}'.format(self.ad.ad_id, self.current_ad_position, self.current_step)
