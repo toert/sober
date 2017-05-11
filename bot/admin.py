@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Ad, LocalUser
+from django.contrib.auth.models import User
 
 
 
