@@ -17,6 +17,7 @@ class LocalUser(models.Model):
         verbose_name = 'Аккаунт LocalBitcoin'
         verbose_name_plural = 'Аккаунты LocalBitcoin'
 
+
 class Ad(models.Model):
 
     user = models.ForeignKey(LocalUser, related_name='ads', verbose_name='Пользователь-владелец')
@@ -35,17 +36,21 @@ class Ad(models.Model):
     amount_limit = models.IntegerField(verbose_name='Предел объема (lim V)')
     min_amount_filter = models.IntegerField(verbose_name='V игнор')
     ad_creation_time_filter = models.DateTimeField(verbose_name='T игнор')
+    delta_amount_filter = models.IntegerField(verbose_name='Delta V')
+    phone_number = models.CharField(max_length=11, verbose_name='Номер телефона (при работе с QIWI)')
     step = models.IntegerField(verbose_name='Шаг цены')
     steps_quantity = models.IntegerField(verbose_name='Количество шагов')
-    ignored_logins = models.TextField(verbose_name='Игнорируемые логины', null=True)
-    invisible_logins = models.TextField(verbose_name='Логины-невидимки', null=True)
+    ignored_logins = models.TextField(verbose_name='Игнорируемые логины', blank=True)
+    invisible_trade_ids = models.TextField(verbose_name='ID сделок-невидимок', blank=True)
     price_rollback = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Откат цены (откат)')
     rollback_time = models.IntegerField(verbose_name='Время отката (T откат) в секундах')
     call_frequency = models.IntegerField(verbose_name='Частота бота в секундах')
+    start_msg = models.TextField(verbose_name='Сообщение при начале сделки', blank=True)
+    finish_msg = models.TextField(verbose_name='Сообщение при завершении сделки', blank=True)
     is_top_fifteen = models.BooleanField(verbose_name='Топ 15')
     is_visible = models.BooleanField(verbose_name='Включено ли объявление?', default=False)
     is_updated = models.BooleanField(verbose_name='Обновлять ли объявление?', default=False)
-    current_amount = models.IntegerField()
+    current_amount = models.IntegerField(default=1)
 
     class Meta:
         verbose_name = 'Обьявление'
@@ -55,9 +60,9 @@ class Ad(models.Model):
         list_of_logins = re.findall(r'([^, ]+)', str(self.ignored_logins))
         return list_of_logins
 
-    def get_invisible_logins_as_list(self):
-        list_of_logins = re.findall(r'([^, ]+)', str(self.invisible_logins))
-        return list_of_logins
+    def get_invisible_trade_ids_as_list(self):
+        list_of_ids = re.findall(r'([^, ]+)', str(self.invisible_trade_ids))
+        return list_of_ids
 
     def __str__(self):
         return '{}/{}/{}'.format(self.ad_id, self.direction, self.price_equation)
@@ -68,7 +73,6 @@ class CurrentInfo(models.Model):
     ad = models.OneToOneField(Ad, db_index=True)
     current_ad_position = models.IntegerField(verbose_name='Текущая позиция')
     current_step = models.IntegerField(verbose_name='Текущий номер шага')
-
 
     def __str__(self):
         return '{}-{}-{}'.format(self.ad.ad_id, self.current_ad_position, self.current_step)
