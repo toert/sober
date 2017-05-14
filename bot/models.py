@@ -1,4 +1,7 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 import re
 
 TYPES_OF_AD = (
@@ -8,9 +11,19 @@ TYPES_OF_AD = (
 
 
 class LocalUser(models.Model):
-    ad_id = models.CharField(max_length=40, db_index=True, verbose_name='Логин')
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    login = models.CharField(max_length=40, db_index=True, verbose_name='Логин', default='')
     hmac_key = models.CharField(max_length=140, db_index=True, verbose_name='HMAC ключ')
     hmac_secret = models.CharField(max_length=140, verbose_name='HMAC пароль')
+
+    @receiver(post_save, sender=User)
+    def create_user_profile(sender, instance, created, **kwargs):
+        if created:
+            LocalUser.objects.create(user=instance)
+
+    @receiver(post_save, sender=User)
+    def save_user_profile(sender, instance, **kwargs):
+        instance.localuser.save()
 
 
     class Meta:
@@ -20,7 +33,7 @@ class LocalUser(models.Model):
 
 class Ad(models.Model):
 
-    user = models.ForeignKey(LocalUser, related_name='ads', verbose_name='Пользователь-владелец')
+    user = models.ForeignKey(User, related_name='ads', verbose_name='Пользователь-владелец')
     ad_id = models.CharField(max_length=40, db_index=True, verbose_name='ID объявления')
     price_equation = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена', default=0.10)
     direction = models.CharField(max_length=80, choices=TYPES_OF_AD, verbose_name='Тип обьявления')
@@ -50,7 +63,10 @@ class Ad(models.Model):
     is_top_fifteen = models.BooleanField(verbose_name='Топ 15')
     is_visible = models.BooleanField(verbose_name='Включено ли объявление?', default=False)
     is_updated = models.BooleanField(verbose_name='Обновлять ли объявление?', default=False)
+
     current_amount = models.IntegerField(default=1)
+    current_ad_position = models.IntegerField(verbose_name='Текущая позиция', null=True)
+    current_step = models.IntegerField(verbose_name='Текущий номер шага', null=True)
 
     class Meta:
         verbose_name = 'Обьявление'
@@ -66,13 +82,3 @@ class Ad(models.Model):
 
     def __str__(self):
         return '{}/{}/{}'.format(self.ad_id, self.direction, self.price_equation)
-
-
-class CurrentInfo(models.Model):
-
-    ad = models.OneToOneField(Ad, db_index=True)
-    current_ad_position = models.IntegerField(verbose_name='Текущая позиция')
-    current_step = models.IntegerField(verbose_name='Текущий номер шага')
-
-    def __str__(self):
-        return '{}-{}-{}'.format(self.ad.ad_id, self.current_ad_position, self.current_step)
