@@ -1,11 +1,9 @@
-from localbitcoin_api import LocalBitcoin
+from .localbitcoin_api import LocalBitcoin
 from datetime import datetime
-import time
-from .models import LocalUser, Ad, CurrentInfo
-import json
-
-
-start_time = time.time()
+from time import mktime
+from .models import LocalUser, Ad
+from re import sub
+from celery import task
 
 
 def edit_ad(ad, client):
@@ -34,27 +32,28 @@ def edit_ad(ad, client):
                        method='post')
 
 
-"""
 def fetch_ads_from_invisible_logins(invisible_logins, client):
     invisible_logins_string = ",".join(invisible_logins)
     params = {
         'ads': invisible_logins_string
     }
-    print(invisible_logins_string)
     return client.sendRequest(endpoint='/api/ad-get/',
                               params=params,
                               method='get')
-"""
 
 
 def fetch_ad_from_trade_id(trade_id, client):
     return client.sendRequest(endpoint='/api/ad-get/{}/'.format(trade_id),
                        params='',
-                       method='post')
+                       method='get')['data']['ad_list'][0]
 
 
 def convert_date_to_timestamp(date):
-    return time.mktime(datetime.strptime(date, '%Y-%m-%dT%H:%M:%S+00:00').timetuple())
+    if type(date) is str:
+        date = sub(r'T', ' ', date)
+    else:
+        date = str(date)
+    return mktime(datetime.strptime(date, '%Y-%m-%d %H:%M:%S+00:00').timetuple())
 
 
 def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
@@ -68,9 +67,9 @@ def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
 
 def sort_ads_by_price(all_ads, direction):
     if direction == 'sell':
-        return sorted(all_ads, key=lambda ad: ad['data']['ad_list']['data']['temp_price'], reverse=True)
+        return sorted(all_ads['data']['ad_list'], key=lambda ad: float(ad['data']['temp_price']), reverse=True)
     elif direction == 'buy':
-        return sorted(all_ads, key=lambda ad: ad['data']['ad_list']['data']['temp_price'])
+        return sorted(all_ads['data']['ad_list'], key=lambda ad: float(ad['data']['temp_price']))
 
 
 def get_own_ad_current_position(own_ad_id, all_ads):
@@ -78,11 +77,11 @@ def get_own_ad_current_position(own_ad_id, all_ads):
     if ad_position:
         return ad_position[0] + 1
     else:
-        return 0
+        return -1
 
 
 def filter_ads_by_time(all_ads, ad_creation_time_filter):
-    return list(filter(lambda ad: convert_date_to_timestamp(ad['data']['created_at']) < float(ad_creation_time_filter), all_ads['data']['ad_list']))
+    return list(filter(lambda ad: convert_date_to_timestamp(ad['data']['created_at']) < convert_date_to_timestamp(ad_creation_time_filter), all_ads))
 
 
 def filter_ads_by_amount(all_ads, min_amount_filter):
@@ -98,8 +97,8 @@ def filter_ads_by_login_black_list(all_ads, blacklist):
 
 
 def get_filtered_ads(all_ads, ad):
-    if ad['is_top_fifteen']:
-        all_ads['data']['ad_list'] = all_ads['data']['ad_list'][:15]
+    if ad.is_top_fifteen:
+        all_ads= all_ads[:15]
     filtered_ads = filter_ads_by_time(all_ads, ad.ad_creation_time_filter)
     filtered_ads = filter_ads_by_login_black_list(filtered_ads, ad.ignored_logins)
     filtered_ads = filter_ads_by_amount(filtered_ads, ad.min_amount_filter)
@@ -154,25 +153,84 @@ def update_ad_price(filtered_ads, ad):
                 ad.price_equation = new_price
     ad.save()
 
+
+def fetch_dashboard_open_trades(client):
+    return client.sendRequest(endpoint='/api/dashboard/',
+                              params='',
+                              method='get')
+
+
+def fetch_dashboard_released_trades(client):
+    return client.sendRequest(endpoint='/api/dashboard/released',
+                              params='',
+                              method='get')
+
+
+def fetch_msg_history(client, trade_contact_id):
+    return client.sendRequest(endpoint='/api/contact_messages/{}/'.format(trade_contact_id),
+                              params='',
+                              method='get')
+
+
+def check_trade_condition(trade_msg_history, start_msg, finish_msg):
+    for msg in trade_msg_history['message_list']:
+        if msg['msg'] == finish_msg:
+            return 'already_finished'
+        elif msg['msg'] == start_msg:
+            return 'already_started'
+
+
+def send_msg(client, trade_contact_id, msg):
+    params = {
+        'msg': msg
+    }
+    return client.sendRequest(endpoint='/api/contact_message_post/{}/'.format(trade_contact_id),
+                              params=params,
+                              method='post')
+
 #@task
-def update_task(ad_id):
-    ad = Ad.objects.filter(id=ad_id)
+def update_task_bot(ad_id):
+    ad = Ad.objects.get(id=ad_id)
     client = LocalBitcoin(ad.user.hmac_key,
                           ad.user.hmac_secret,
                           debug=False)
     all_ads_json = fetch_all_ads_json(ad.direction, ad.online_provider, ad.get_invisible_trade_ids_as_list(), client)
     sorted_ads = sort_ads_by_price(all_ads_json, ad.direction)
-    ad_meta = CurrentInfo.objects.filter(ad=ad)
-    ad_meta.current_ad_position = get_own_ad_current_position(ad.ad_id, sorted_ads)
-    ad_meta.save()
+    ad.current_ad_position = get_own_ad_current_position(ad.ad_id, sorted_ads)
+    ad.save()
     filtered_ads = get_filtered_ads(sorted_ads, ad)
     update_ad_price(filtered_ads, ad)
     edit_ad(ad, client)
 
+#@task
+def update_task_dashboard(user_id):
+    user = LocalUser.objects.get(id=user_id)
+    client = LocalBitcoin(user.hmac_key,
+                          user.hmac_secret,
+                          debug=False)
+
+    open_trades = fetch_dashboard_open_trades(client)
+    for trade in open_trades['data']['contact_list']:
+        trade_msg_history = fetch_msg_history(client, trade['data']['contact_id'])
+        ad = Ad.objects.get(id=trade['data']['advertisement']['id'])
+        if check_trade_condition(trade_msg_history, ad.start_msg, ad.finish_msg) != 'already_started':
+            send_msg(client, trade['data']['contact_id'], ad.start_msg)
+
+    released_trades = fetch_dashboard_released_trades(client)
+    for trade in released_trades['data']['contact_list']:
+        trade_msg_history = fetch_msg_history(client, trade['data']['contact_id'])
+        ad = Ad.objects.get(id=trade['data']['advertisement']['id'])
+        if check_trade_condition(trade_msg_history, ad.start_msg, ad.finish_msg) != 'already_finished':
+            send_msg(client, trade['data']['contact_id'], ad.finish_msg)
+
+@task
+def supa_pupa_task():
+    test.apply_async('1', '2', '3')
+
+
+def test(params):
+    print('The test task executed with argument {} ').format(params)
+
 
 if __name__ == '__main__':
-    update_task(1)
-    print("--- %s seconds ---" % (time.time() - start_time))
-    #print(json.dumps(all_ads_json, ensure_ascii=False, sort_keys=True, indent=1))
-    #for ad in filtered_ads:
-    #    print(json.dumps(ad, ensure_ascii=False, sort_keys=True, indent=1))
+    pass
