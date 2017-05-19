@@ -20,10 +20,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
+CELERYD_CONCURRENCY = 66
+
 CELERYBEAT_SCHEDULE = {
-    'update_prices': {
+    'update_dashboard': {
         'task': 'bot.project.supa_pupa_task',
-        'schedule': timedelta(minutes=1)
+        'schedule': timedelta(seconds=30)
     }
 }
 
