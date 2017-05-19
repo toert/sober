@@ -57,3 +57,19 @@ def edit_ad(request, bot_id):
                 form.save()
                 return HttpResponseRedirect(reverse('render_dashboard'))
             print('Fucked up!')
+
+
+def update_table(request):
+    ads = Ad.objects.filter(user=request.user)
+    # ads_and_forms = []
+    # if request.method == 'POST':
+    #    form = HorizontalForm(request.POST, instance=)
+    #    if form.is_valid():
+    #      form.save()
+    #        return HttpResponseRedirect(reverse('render_dashboard'))
+    #    print('Fucked up!')
+    # for ad in ads:
+    #    ads_and_forms.append((ad, HorizontalForm(instance=ad)))
+    return render(request, 'table.html', {'ads': ads})
+
+

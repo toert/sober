@@ -1,0 +1,43 @@
+    <table class="table" id="MyTable">
+        <tr>
+          <th>ID</th>
+          <th>Напр</th> 
+          <th>Инстр</th> 
+          <th>Вал</th>
+          <th>min ц</th> 
+          <th>max ц</th>
+          <th>Тек поз</th> 
+          <th>Курс</th> 
+          <th>Обьем</th> 
+          <th>Шаг</th> 
+          <th>max V</th> 
+          <th>lim ц</th> 
+          <th>lim V</th> 
+          <th>Шаг б</th> 
+          <th>Активн</th>
+          <th>Сохр</th> 
+        </tr>
+        {% for ad in ads %}
+        <tr>
+        <form action="/edit/{{ad.id}}" method="post">
+          {% csrf_token %}
+          <td>{{ ad.id }}</td>
+          <td>{{ ad.direction }}</td> 
+          <td>{{ ad.online_provider }}</td>
+          <td>{{ ad.currency }}</td>
+          <td><input type="number" class="fixed_width" name="min_price" value="{{ ad.min_price }}"  step="0.01" required=""></td> 
+          <td><input type="number" class="fixed_width" name="max_price" value="{{ ad.max_price }}"  step="0.01" required=""></td>
+          <td>{{ ad.current_ad_position }}</td>
+          <td>{{ ad.price_equation }}</td> 
+          <td>{{ ad.current_amount }}</td>
+          <td><input type="number" class="fixed_width" name="step" value="{{ ad.step }}"  required=""></td>
+          <td><input type="number"  class="fixed_width" name="max_amount" value="{{ ad.max_amount }}"  required=""></td> 
+          <td><input type="number"  class="fixed_width" name="price_limit" value="{{ ad.price_limit }}" step="0.01" required=""></td>
+          <td><input type="number"  class="fixed_width" name="amount_limit" value="{{ ad.amount_limit }}" required=""></td>
+          <td>{{ ad.current_step }}</td> 
+          <td><input type="checkbox"  class="fixed_width" name="is_updated"  {% if ad.is_updated %}checked=""{% endif %}></td>
+          <td><input type="submit" value="√"  class="text-center"/></td> 
+          </form>
+        </tr>
+        {% endfor %}
+      </table>
