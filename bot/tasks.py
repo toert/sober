@@ -24,7 +24,7 @@ def edit_ad(ad, client):
         'require_identification': False,
         'online_provider': ad.online_provider,
         'max_amount': ad.current_amount,
-        'details-phone_number': ad.phone_number, # Специальное поле при Payment method: QIWI (QIWI)
+        'details-phone_number': ad.phone_number,  # Специальное поле при Payment method: QIWI (QIWI)
         'visible': ad.is_visible
     }
     client.sendRequest(endpoint='/api/ad/{}/'.format(ad.ad_id),
@@ -48,8 +48,8 @@ def fetch_ads_from_invisible_logins(invisible_logins, client):
 
 def fetch_ad_from_trade_id(trade_id, client):
     return client.sendRequest(endpoint='/api/ad-get/{}/'.format(trade_id),
-                       params='',
-                       method='get')['data']['ad_list'][0]
+                              params='',
+                              method='get')['data']['ad_list'][0]
 
 
 def convert_date_to_timestamp(date):
@@ -77,7 +77,7 @@ def sort_ads_by_price(all_ads, direction):
 
 
 def get_own_ad_current_position(own_ad_id, all_ads):
-    ad_position = [position for position,ad_id in enumerate(all_ads) if ad_id == own_ad_id]
+    ad_position = [position for position, ad_id in enumerate(all_ads) if ad_id == own_ad_id]
     if ad_position:
         return ad_position[0] + 1
     else:
@@ -85,15 +85,17 @@ def get_own_ad_current_position(own_ad_id, all_ads):
 
 
 def filter_ads_by_time(all_ads, ad_creation_time_filter):
-    return list(filter(lambda ad: convert_date_to_timestamp(ad['data']['created_at']) < convert_date_to_timestamp(ad_creation_time_filter), all_ads))
+    return list(filter(lambda ad: convert_date_to_timestamp(ad['data']['created_at']) < convert_date_to_timestamp(
+        ad_creation_time_filter), all_ads))
 
 
 def filter_ads_by_amount(all_ads, min_amount_filter):
-    return list(filter(lambda ad: int(ad['data']['max_amount']) > min_amount_filter , all_ads))
+    return list(filter(lambda ad: int(ad['data']['max_amount']) > min_amount_filter, all_ads))
 
 
 def filter_ads_by_delta_amount(all_ads, delta_amount_filter):
-    return list(filter(lambda ad: (int(ad['data']['max_amount']) - int(ad['data']['min_amount'])) > delta_amount_filter, all_ads))
+    return list(filter(lambda ad: (int(ad['data']['max_amount']) - int(ad['data']['min_amount'])) > delta_amount_filter,
+                       all_ads))
 
 
 def filter_ads_by_login_black_list(all_ads, blacklist):
@@ -102,7 +104,7 @@ def filter_ads_by_login_black_list(all_ads, blacklist):
 
 def get_filtered_ads(all_ads, ad):
     if ad.is_top_fifteen:
-        all_ads= all_ads[:15]
+        all_ads = all_ads[:15]
     filtered_ads = filter_ads_by_time(all_ads, ad.ad_creation_time_filter)
     filtered_ads = filter_ads_by_login_black_list(filtered_ads, ad.ignored_logins)
     filtered_ads = filter_ads_by_amount(filtered_ads, ad.min_amount_filter)
@@ -212,7 +214,13 @@ def update_ad_bot(ad_id):
     edit_ad(ad, client)
 
 
-#@task
+def run_all_dashboards_processing():
+    while True:
+        all_user_ids_list = queryset_to_list(LocalUser.objects.values_id('id'))
+        for user_id in all_user_ids_list:
+            update_task_dashboard(user_id)
+
+
 def update_task_dashboard(user_id):
     user = LocalUser.objects.get(id=user_id)
     client = LocalBitcoin(user.hmac_key,
@@ -222,9 +230,11 @@ def update_task_dashboard(user_id):
     open_trades = fetch_dashboard_open_trades(client)
     for trade in open_trades['data']['contact_list']:
         trade_msg_history = fetch_msg_history(client, trade['data']['contact_id'])
+        trade_last_three_symbols = str(trade['data']['contact_id'])[:-3]
         ad = Ad.objects.get(id=trade['data']['advertisement']['id'])
         if check_trade_condition(trade_msg_history, ad.start_msg, ad.finish_msg) != 'already_started':
-            send_msg(client, trade['data']['contact_id'], ad.start_msg)
+            msg = '{}\nКомментарий: {}'.format(ad.start_msg, trade_last_three_symbols)
+            send_msg(client, trade['data']['contact_id'], msg)
 
     released_trades = fetch_dashboard_released_trades(client)
     for trade in released_trades['data']['contact_list']:
@@ -235,7 +245,7 @@ def update_task_dashboard(user_id):
 
 
 def run_all_ads_bots_asynchronous():
-    all_ad_ids_list = queryset_to_list(Ad.objects.values_list('ad_id'))
+    all_ad_ids_list = queryset_to_list(Ad.objects.values_list('id'))
     update_task_ad.apply_async(all_ad_ids_list)
 
 
