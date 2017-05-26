@@ -57,7 +57,6 @@ class Ad(models.Model):
     invisible_trade_ids = models.TextField(verbose_name='ID сделок-невидимок', blank=True)
     price_rollback = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Откат цены (откат)')
     rollback_time = models.IntegerField(verbose_name='Время отката (T откат) в секундах')
-    call_frequency = models.IntegerField(verbose_name='Частота бота в секундах')
     start_msg = models.TextField(verbose_name='Сообщение при начале сделки', blank=True)
     finish_msg = models.TextField(verbose_name='Сообщение при завершении сделки', blank=True)
     is_top_fifteen = models.BooleanField(verbose_name='Топ 15')

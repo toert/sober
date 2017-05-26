@@ -34,14 +34,26 @@
     <![endif]-->
     <style>
       .fixed_width {
-        width: 50px; !important
+        width: 100%; 
+        min-width: 60px; !important
       }
+
       tbody {
         font-size: xx-small;
       }
       .table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
     padding: 2px;
     border: 1px solid;
+  }
+      .green {
+        background-color: #ADFF6F;
+      }
+      .gray {
+        background-color: #DDDDDD;
+      }
+      .red {
+        background-color: #FFDDDD;
+      }
     </style>
   </head>
 
@@ -79,7 +91,9 @@
           <th>Сохр</th> 
         </tr>
         {% for ad in ads %}
-        <tr>
+        <tr {% if ad.is_updated %}class="gray"
+            {% elif ad.direction == 'sell' %}class="green"
+            {% elif ad.direction == 'buy' %}class="red"{% endif %}>
         <form action="/edit/{{ad.id}}" method="post">
           {% csrf_token %}
           <td>{{ ad.id }}</td>
@@ -132,7 +146,7 @@
                    alert("Got an error dude "+data);
                }
            });
-       },5000);
+       }, 10000);
     });
 
  </script>

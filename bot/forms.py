@@ -38,10 +38,10 @@ class CreateBot(ModelForm):
                   'invisible_trade_ids',
                   'price_rollback',
                   'rollback_time',
-                  'call_frequency',
                   'start_msg',
                   'finish_msg',
                   'is_top_fifteen',
+                  'is_visible',
                   'is_updated', ]
 
         widgets = {

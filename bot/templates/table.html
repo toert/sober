@@ -1,4 +1,4 @@
-    <table class="table" id="MyTable">
+<table class="table" id="MyTable">
         <tr>
           <th>ID</th>
           <th>Напр</th> 
@@ -18,7 +18,9 @@
           <th>Сохр</th> 
         </tr>
         {% for ad in ads %}
-        <tr>
+        <tr {% if ad.is_updated %}class="gray"
+            {% elif ad.direction == 'sell' %}class="green"
+            {% elif ad.direction == 'buy' %}class="red"{% endif %}>
         <form action="/edit/{{ad.id}}" method="post">
           {% csrf_token %}
           <td>{{ ad.id }}</td>
