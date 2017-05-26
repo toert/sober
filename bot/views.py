@@ -59,6 +59,20 @@ def edit_ad(request, bot_id):
             print('Fucked up!')
 
 
+@login_required
+def change_bot_from_vertical(request, bot_id):
+    print(bot_id)
+    ad_instanse = Ad.objects.get(id=bot_id)
+    if request.method == 'POST' and ad_instanse.user == request.user:
+        form = CreateBot(request.POST or None, instance=ad_instanse)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('render_dashboard'))
+        print('Fucked up!')
+    form = CreateBot(request.POST or None, instance=ad_instanse)
+    return render(request, 'create.html', {'form': form})
+
+
 def update_table(request):
     ads = Ad.objects.filter(user=request.user)
     # ads_and_forms = []

@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 
 class AdAdmin(admin.ModelAdmin):
-    exclude = ('price_equation', 'current_amount')
+    exclude = ('price_equation', 'current_amount', 'current_ad_position', 'current_step')
 
 
 class UserAdmin(admin.ModelAdmin):
