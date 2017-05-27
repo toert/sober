@@ -15,7 +15,7 @@
           <th>lim V</th> 
           <th>Шаг б</th> 
           <th>Активн</th>
-          <th>Сохр</th> 
+          <th></th> 
         </tr>
         {% for ad in ads %}
         <tr {% if ad.is_updated %}class="gray"
@@ -27,8 +27,8 @@
           <td>{{ ad.direction }}</td> 
           <td>{{ ad.online_provider }}</td>
           <td>{{ ad.currency }}</td>
-          <td><input type="number" class="fixed_width" name="min_price" value="{{ ad.min_price }}"  step="0.01" required=""></td> 
-          <td><input type="number" class="fixed_width" name="max_price" value="{{ ad.max_price }}"  step="0.01" required=""></td>
+          <td><input type="number" class="fixed_width" name="min_price" value="{{ ad.min_price }}" required=""></td> 
+          <td><input type="number" class="fixed_width" name="max_price" value="{{ ad.max_price }}" required=""></td>
           <td>{{ ad.current_ad_position }}</td>
           <td>{{ ad.price_equation }}</td> 
           <td>{{ ad.current_amount }}</td>

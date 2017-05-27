@@ -59,7 +59,7 @@ class CreateBot(ModelForm):
 class HmacForm(ModelForm):
     class Meta:
         model = LocalUser
-        fields = ['login', 'hmac_key', 'hmac_secret']
+        fields = ['login', 'hmac_key', 'hmac_secret', 'proxy']
 
     def save_with_user(self, user, commit=True):
         new_key = ModelForm.save(self, commit=False)
