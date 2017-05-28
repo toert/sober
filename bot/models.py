@@ -31,6 +31,14 @@ class LocalUser(models.Model):
         verbose_name = 'Аккаунт LocalBitcoin'
         verbose_name_plural = 'Аккаунты LocalBitcoin'
 
+    def get_proxies(self):
+        if self.proxy:
+            return {
+                  "http": 'http://{}'.format(self.proxy),
+                  "https": 'https://{}'.format(self.proxy),
+                  "ftp": 'ftp://{}'.format(self.proxy)
+                }
+
 
 class Ad(models.Model):
 
