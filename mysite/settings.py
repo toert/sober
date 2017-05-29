@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+from datetime import timedelta
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,11 +24,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CELERYBEAT_SCHEDULE = {
     'update_list_of_ads': {
         'task': 'bot.tasks.update_list_of_all_ads',
-        'schedule': float(os.getenv('delay'))
+        'schedule': timedelta(minutes=os.getenv('delay'))
     }
 }
 
-CELERYD_CONCURRENCY = 66
+CELERYD_CONCURRENCY = 15
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'u10!-@clbva8=n4ui=64-y6!e7249(&!#bgtw=qv$b_qvi5t%7'
@@ -47,7 +49,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bot',
-    'django_extensions'
 ]
 
 MIDDLEWARE = [

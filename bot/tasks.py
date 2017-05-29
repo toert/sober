@@ -187,7 +187,7 @@ def update_ad(ad_id):
     client = hmac(ad.user.localuser.hmac_key,
                   ad.user.localuser.hmac_secret,
                   ad.user.localuser.proxy)
-    delay = float(getenv('delay'))
+    delay = float(getenv('delay')) * 60
     start_time = time()
     while time() - start_time < delay:
         if ad.is_updated:
