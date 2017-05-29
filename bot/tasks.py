@@ -1,7 +1,7 @@
 from .localbitcoin_api import LocalBitcoin
 from datetime import datetime
 from time import mktime, sleep
-from .models import LocalUser, Ad
+from .models import Ad
 from re import sub
 from celery.task import task
 
@@ -30,10 +30,6 @@ def edit_ad(ad, client):
     client.sendRequest(endpoint='/api/ad/{}/'.format(ad.ad_id),
                        params=params,
                        method='post')
-
-
-def queryset_to_list(queryset):
-    return [result[0] for result in list(queryset)]
 
 
 def fetch_ads_from_invisible_logins(invisible_logins, client):
@@ -103,8 +99,6 @@ def filter_ads_by_login_black_list(all_ads, blacklist):
 
 
 def get_filtered_ads(all_ads, ad):
-    if ad.is_top_fifteen:
-        all_ads = all_ads[:15]
     filtered_ads = filter_ads_by_time(all_ads, ad.ad_creation_time_filter)
     filtered_ads = filter_ads_by_login_black_list(filtered_ads, ad.ignored_logins)
     filtered_ads = filter_ads_by_amount(filtered_ads, ad.min_amount_filter)
@@ -125,6 +119,8 @@ def calculate_best_price_for_buy(all_ads):
 def update_ad_price(filtered_ads, ad):
     if ad.direction == 'buy':
         new_price = float(calculate_best_price_for_buy(filtered_ads)) - ad.step
+        print('Чужая лучшая цена: {}'.format(float(calculate_best_price_for_buy(filtered_ads))))
+        print('Новая лучшая цена после вычислений: {}'.format(new_price))
         if ad.price_limit == ad.min_price:
             if new_price > ad.min_price:
                 ad.price_equation = new_price
@@ -142,6 +138,8 @@ def update_ad_price(filtered_ads, ad):
                 ad.price_equation = new_price
     elif ad.direction == 'sell':
         new_price = float(calculate_best_price_for_sell(filtered_ads)) + ad.step
+        print('Чужая лучшая цена: {}'.format(float(calculate_best_price_for_sell(filtered_ads))))
+        print('Новая лучшая цена после вычислений: {}'.format(new_price))
         if ad.price_limit == ad.max_price:
             if new_price < ad.max_price:
                 ad.price_equation = new_price
@@ -157,112 +155,55 @@ def update_ad_price(filtered_ads, ad):
             else:
                 ad.current_amount = ad.max_amount
                 ad.price_equation = new_price
-    ad.save()
+    print('Цена после вычилений {}, обьем после вычислений {}'.format(ad.price_equation, ad.current_amount))
 
 
 def rollback_ad_price(ad, price_rollback):
-    ad.price_equation -= price_rollback
+    ad.price_equation -= float(price_rollback)
     ad.save()
 
 
-def fetch_dashboard_open_trades(client):
-    return client.sendRequest(endpoint='/api/dashboard/',
-                              params='',
-                              method='get')
-
-
-def fetch_dashboard_released_trades(client):
-    return client.sendRequest(endpoint='/api/dashboard/released',
-                              params='',
-                              method='get')
-
-
-def fetch_msg_history(client, trade_contact_id):
-    return client.sendRequest(endpoint='/api/contact_messages/{}/'.format(trade_contact_id),
-                              params='',
-                              method='get')
-
-
-def check_trade_condition(trade_msg_history, start_msg, finish_msg):
-    for msg in trade_msg_history['message_list']:
-        if msg['msg'] == finish_msg:
-            return 'already_finished'
-        elif msg['msg'] == start_msg:
-            return 'already_started'
-
-
-def send_msg(client, trade_contact_id, msg):
-    params = {
-        'msg': msg
-    }
-    return client.sendRequest(endpoint='/api/contact_message_post/{}/'.format(trade_contact_id),
-                              params=params,
-                              method='post')
-
-
-def update_ad_bot(ad_id):
-    ad = Ad.objects.get(id=ad_id)
-    client = LocalBitcoin(ad.user.hmac_key,
-                          ad.user.hmac_secret,
-                          debug=False)
+def update_ad_bot(ad, client):
     all_ads_json = fetch_all_ads_json(ad.direction, ad.online_provider, ad.get_invisible_trade_ids_as_list(), client)
+    if ad.is_top_fifteen:
+        all_ads_json['data']['ad_list'] = all_ads_json['data']['ad_list'][:15]
+    ad.current_ad_position = get_own_ad_current_position(ad.ad_id, all_ads_json)
     sorted_ads = sort_ads_by_price(all_ads_json, ad.direction)
-    ad.current_ad_position = get_own_ad_current_position(ad.ad_id, sorted_ads)
-    ad.save()
     filtered_ads = get_filtered_ads(sorted_ads, ad)
     update_ad_price(filtered_ads, ad)
+    ad.save()
+    print('Новая цена после сохранения: {}'.format(ad.price_equation))
+    print('Новые параметры: шаг {}, цена {}, обьем {}'.format(ad.current_step, ad.price_equation, ad.current_amount))
     edit_ad(ad, client)
 
 
-def run_all_dashboards_processing():
-    while True:
-        all_user_ids_list = queryset_to_list(LocalUser.objects.values_id('id'))
-        for user_id in all_user_ids_list:
-            update_task_dashboard(user_id)
-
-
-def update_task_dashboard(user_id):
-    user = LocalUser.objects.get(id=user_id)
-    client = LocalBitcoin(user.hmac_key,
-                          user.hmac_secret,
-                          debug=False)
-
-    open_trades = fetch_dashboard_open_trades(client)
-    for trade in open_trades['data']['contact_list']:
-        trade_msg_history = fetch_msg_history(client, trade['data']['contact_id'])
-        trade_last_three_symbols = str(trade['data']['contact_id'])[:-3]
-        ad = Ad.objects.get(id=trade['data']['advertisement']['id'])
-        if check_trade_condition(trade_msg_history, ad.start_msg, ad.finish_msg) != 'already_started':
-            msg = '{}\nКомментарий: {}'.format(ad.start_msg, trade_last_three_symbols)
-            send_msg(client, trade['data']['contact_id'], msg)
-
-    released_trades = fetch_dashboard_released_trades(client)
-    for trade in released_trades['data']['contact_list']:
-        trade_msg_history = fetch_msg_history(client, trade['data']['contact_id'])
-        ad = Ad.objects.get(id=trade['data']['advertisement']['id'])
-        if check_trade_condition(trade_msg_history, ad.start_msg, ad.finish_msg) != 'already_finished':
-            send_msg(client, trade['data']['contact_id'], ad.finish_msg)
-
-
-def run_all_ads_bots_asynchronous():
-    all_ad_ids_list = queryset_to_list(Ad.objects.values_list('id'))
-    update_task_ad.apply_async(all_ad_ids_list)
+def ya_obezyanka(params):
+    update_task_ad.apply_async(params)
 
 
 @task
 def update_task_ad(ad_id):
-    ad = Ad.objects.filter(id=ad_id)
+    ad = Ad.objects.get(id=ad_id)
+    client = LocalBitcoin(ad.user.localuser.hmac_key,
+                          ad.user.localuser.hmac_secret,
+                          debug=False)
     while True:
         while ad.is_updated:
             ad.current_step = 1
+            ad.save()
             while ad.current_step < ad.steps_quantity:
-                update_ad_bot(ad.ad_id)
-                ad.current_step += 1
+                ad = Ad.objects.get(id=ad_id)
+                old_price = ad.price_equation
+                print('Старые параметры: шаг {}, цена {}, обьем {}'.format(ad.current_step,ad.price_equation,ad.current_amount))
+                update_ad_bot(ad, client)
+                if not float(ad.price_equation) == float(old_price):
+                    ad.current_step += 1
                 ad.save()
+                print('loop complited!')
+                print('Проверка новых параметров: шаг {}, цена {}, обьем {}'.format(ad.current_step,ad.price_equation,ad.current_amount))
+                print('-----')
             rollback_ad_price(ad, ad.price_rollback)
+            edit_ad(ad, client)
+            print('Пошел спать')
             sleep(ad.rollback_time)
         sleep(60)
-
-
-if __name__ == '__main__':
-    pass

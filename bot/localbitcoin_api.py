@@ -254,4 +254,16 @@ class LocalBitcoin:
             print ('METHOD: ' + method)
             print ('RESPONSE: ' + response.text)
 
-        return json.loads(response.text)
+        return response.json()
+
+
+if __name__ == '__main__':
+    import time
+    start_time = time.time()
+    client = LocalBitcoin('a77ae8d32c1cce099a65388c0791b65d',
+                          '8fbcd2c95f340b3d6fc43938b4e8bfc9ecabc57d0cb82ddefcf8f4accb047d03',
+                          debug=True)
+    client.sendRequest(endpoint='/api/ads/',
+                       params='',
+                       method='get')
+    print("--- %s seconds ---" % (time.time() - start_time))
