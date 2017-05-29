@@ -4,13 +4,13 @@ import requests
 import time
 
 
-def oauth2(access_token, client_id, client_secret=None, refresh_token=None, server='https://localbitcoins.com'):
+def oauth2(access_token, client_id, client_secret=None, refresh_token=None, server='https://localbitcoins.net'):
     conn = Connection()
     conn._set_oauth2(server, client_id, client_secret, access_token, refresh_token)
     return conn
 
 
-def hmac(hmac_key, hmac_secret, proxies, server='https://localbitcoins.com'):
+def hmac(hmac_key, hmac_secret, proxies, server='https://localbitcoins.net'):
     conn = Connection()
     conn._set_hmac(server, hmac_key, hmac_secret, proxies)
     return conn
@@ -164,21 +164,3 @@ class Connection():
         self.expiry_seconds = None
         self.hmac_key = hmac_key
         self.hmac_secret = hmac_secret
-
-import time
-
-if __name__=='__main__':
-    start_time = time.time()
-    api = hmac('a77ae8d32c1cce099a65388c0791b65d',
-               '8fbcd2c95f340b3d6fc43938b4e8bfc9ecabc57d0cb82ddefcf8f4accb047d03',
-               None,
-               'https://localbitcoins.net')
-    cnt = 0
-    while time.time() - start_time < 120:
-
-        print(api.call('get', '/api/ads/').json())
-        #print(api.call('get', '/buy-bitcoins-online/RU/russian-federation/.json').json())
-        cnt += 1
-
-    print(cnt)
-    print(time.time() - start_time)

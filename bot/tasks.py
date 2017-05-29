@@ -1,9 +1,10 @@
-from .localbitcoin_api import LocalBitcoin
+from .lbcapi import hmac, Connection
 from datetime import datetime
-from time import mktime, sleep
+from time import mktime, sleep, time
 from .models import Ad
 from re import sub
 from celery.task import task
+from os import getenv
 
 
 def edit_ad(ad, client):
@@ -27,9 +28,9 @@ def edit_ad(ad, client):
         'details-phone_number': ad.phone_number,  # Специальное поле при Payment method: QIWI (QIWI)
         'visible': ad.is_visible
     }
-    client.sendRequest(endpoint='/api/ad/{}/'.format(ad.ad_id),
-                       params=params,
-                       method='post')
+    client.call(method='post',
+                url='/api/ad/{}/'.format(ad.ad_id),
+                params=params)
 
 
 def fetch_ads_from_invisible_logins(invisible_logins, client):
@@ -37,15 +38,15 @@ def fetch_ads_from_invisible_logins(invisible_logins, client):
     params = {
         'ads': invisible_logins_string
     }
-    return client.sendRequest(endpoint='/api/ad-get/',
-                              params=params,
-                              method='get')
+    return client.call(method='get',
+                       url='/api/ad-get/',
+                       params=params)
 
 
 def fetch_ad_from_trade_id(trade_id, client):
-    return client.sendRequest(endpoint='/api/ad-get/{}/'.format(trade_id),
-                              params='',
-                              method='get')['data']['ad_list'][0]
+    return client.call(method='get',
+                       url='/api/ad-get/{}/'.format(trade_id),
+                       params='')['data']['ad_list'][0]
 
 
 def convert_date_to_timestamp(date):
@@ -57,9 +58,9 @@ def convert_date_to_timestamp(date):
 
 
 def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
-    all_ads = client.sendRequest(endpoint='/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider),
-                                 params='',
-                                 method='get')
+    all_ads = client.call(method='get',
+                          url='/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider),
+                          params='')
     for id in invisible_trade_ids:
         all_ads['data']['ad_list'].append(fetch_ad_from_trade_id(id, client))
     return all_ads
@@ -119,8 +120,6 @@ def calculate_best_price_for_buy(all_ads):
 def update_ad_price(filtered_ads, ad):
     if ad.direction == 'buy':
         new_price = float(calculate_best_price_for_buy(filtered_ads)) - ad.step
-        print('Чужая лучшая цена: {}'.format(float(calculate_best_price_for_buy(filtered_ads))))
-        print('Новая лучшая цена после вычислений: {}'.format(new_price))
         if ad.price_limit == ad.min_price:
             if new_price > ad.min_price:
                 ad.price_equation = new_price
@@ -138,8 +137,6 @@ def update_ad_price(filtered_ads, ad):
                 ad.price_equation = new_price
     elif ad.direction == 'sell':
         new_price = float(calculate_best_price_for_sell(filtered_ads)) + ad.step
-        print('Чужая лучшая цена: {}'.format(float(calculate_best_price_for_sell(filtered_ads))))
-        print('Новая лучшая цена после вычислений: {}'.format(new_price))
         if ad.price_limit == ad.max_price:
             if new_price < ad.max_price:
                 ad.price_equation = new_price
@@ -155,7 +152,6 @@ def update_ad_price(filtered_ads, ad):
             else:
                 ad.current_amount = ad.max_amount
                 ad.price_equation = new_price
-    print('Цена после вычилений {}, обьем после вычислений {}'.format(ad.price_equation, ad.current_amount))
 
 
 def rollback_ad_price(ad, price_rollback):
@@ -171,39 +167,39 @@ def update_ad_bot(ad, client):
     sorted_ads = sort_ads_by_price(all_ads_json, ad.direction)
     filtered_ads = get_filtered_ads(sorted_ads, ad)
     update_ad_price(filtered_ads, ad)
-    ad.save()
-    print('Новая цена после сохранения: {}'.format(ad.price_equation))
-    print('Новые параметры: шаг {}, цена {}, обьем {}'.format(ad.current_step, ad.price_equation, ad.current_amount))
     edit_ad(ad, client)
+    return ad
 
 
-def ya_obezyanka(params):
-    update_task_ad.apply_async(params)
+def queryset_to_list(queryset):
+    return [result[0] for result in list(queryset)]
 
 
 @task
-def update_task_ad(ad_id):
+def update_list_of_all_ads():
+    all_ad_ids_list = queryset_to_list(Ad.objects.values_list('id'))
+    update_ad.apply_async(all_ad_ids_list)
+
+
+@task
+def update_ad(ad_id):
     ad = Ad.objects.get(id=ad_id)
-    client = LocalBitcoin(ad.user.localuser.hmac_key,
-                          ad.user.localuser.hmac_secret,
-                          debug=False)
-    while True:
-        while ad.is_updated:
+    client = hmac(ad.user.localuser.hmac_key,
+                  ad.user.localuser.hmac_secret,
+                  ad.user.localuser.proxy)
+    delay = float(getenv('delay'))
+    start_time = time()
+    while time() - start_time < delay:
+        if ad.is_updated:
             ad.current_step = 1
-            ad.save()
-            while ad.current_step < ad.steps_quantity:
-                ad = Ad.objects.get(id=ad_id)
+            while ad.current_step < ad.steps_quantity and time() - start_time < delay:
                 old_price = ad.price_equation
-                print('Старые параметры: шаг {}, цена {}, обьем {}'.format(ad.current_step,ad.price_equation,ad.current_amount))
-                update_ad_bot(ad, client)
+                ad = update_ad_bot(ad, client)
                 if not float(ad.price_equation) == float(old_price):
                     ad.current_step += 1
                 ad.save()
-                print('loop complited!')
-                print('Проверка новых параметров: шаг {}, цена {}, обьем {}'.format(ad.current_step,ad.price_equation,ad.current_amount))
-                print('-----')
             rollback_ad_price(ad, ad.price_rollback)
             edit_ad(ad, client)
-            print('Пошел спать')
             sleep(ad.rollback_time)
-        sleep(60)
+        elif time() - start_time < delay:
+            sleep(60)
