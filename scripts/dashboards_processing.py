@@ -1,23 +1,23 @@
-from bot.localbitcoin_api import LocalBitcoin
+from bot.lbcapi import hmac, Connection
 from bot.models import LocalUser, Ad
 
 
 def fetch_dashboard_open_trades(client):
-    return client.sendRequest(endpoint='/api/dashboard/',
-                              params='',
-                              method='get')
+    return client.call(method='get',
+                       url='/api/dashboard/',
+                       params='')
 
 
 def fetch_dashboard_released_trades(client):
-    return client.sendRequest(endpoint='/api/dashboard/released',
-                              params='',
-                              method='get')
+    return client.call(method='get',
+                       url='/api/dashboard/released',
+                       params='')
 
 
 def fetch_msg_history(client, trade_contact_id):
-    return client.sendRequest(endpoint='/api/contact_messages/{}/'.format(trade_contact_id),
-                              params='',
-                              method='get')
+    return client.call(method='get',
+                       url='/api/contact_messages/{}/'.format(trade_contact_id),
+                       params='')
 
 
 def check_trade_condition(trade_msg_history, start_msg, finish_msg):
@@ -32,9 +32,9 @@ def send_msg(client, trade_contact_id, msg):
     params = {
         'msg': msg
     }
-    return client.sendRequest(endpoint='/api/contact_message_post/{}/'.format(trade_contact_id),
-                              params=params,
-                              method='post')
+    return client.call(method='post',
+                       url='/api/contact_message_post/{}/'.format(trade_contact_id),
+                       params=params)
 
 
 def queryset_to_list(queryset):
@@ -50,9 +50,9 @@ def run():
 
 def update_task_dashboard(user_id):
     user = LocalUser.objects.get(id=user_id)
-    client = LocalBitcoin(user.hmac_key,
-                          user.hmac_secret,
-                          debug=False)
+    client = hmac(user.localuser.hmac_key,
+                  user.localuser.hmac_secret,
+                  user.localuser.proxy)
 
     open_trades = fetch_dashboard_open_trades(client)
     for trade in open_trades['data']['contact_list']:

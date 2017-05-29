@@ -19,6 +19,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
+CELERYBEAT_SCHEDULE = {
+    'update_list_of_ads': {
+        'task': 'bot.tasks.update_list_of_all_ads',
+        'schedule': float(os.getenv('delay'))
+    }
+}
+
 CELERYD_CONCURRENCY = 66
 
 # SECURITY WARNING: keep the secret key used in production secret!
