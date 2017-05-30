@@ -32,7 +32,7 @@ CELERYBEAT_SCHEDULE = {
     }
 }
 
-CELERYD_CONCURRENCY = 66
+CELERYD_CONCURRENCY = 10
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'u10!-@clbva8=n4ui=64-y6!e7249(&!#bgtw=qv$b_qvi5t%7'

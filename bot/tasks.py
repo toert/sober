@@ -260,5 +260,5 @@ def update_ad(self, ad):
 
 @task
 def update_dashboard_task():
-    for user in list(LocalUser.objects.all):
+    for user in LocalUser.objects.all:
         update_dashboard(user)
