@@ -232,7 +232,7 @@ def update_ad_bot(ad, client):
 
 @task
 def update_list_of_all_ads():
-    update_ad.apply_async(queryset_to_list(Ad.objects.all))
+    update_ad.apply_async(list(Ad.objects.all))
 
 
 @task
@@ -260,5 +260,5 @@ def update_ad(self, ad):
 
 @task
 def update_dashboard_task():
-    for user in queryset_to_list(LocalUser.objects.all):
+    for user in list(LocalUser.objects.all):
         update_dashboard(user)
