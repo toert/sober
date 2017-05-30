@@ -236,7 +236,7 @@ def update_list_of_all_ads():
 
 
 @task
-def update_ad(ad):
+def update_ad(self, ad):
     client = hmac(ad.user.localuser.hmac_key,
                   ad.user.localuser.hmac_secret,
                   ad.user.localuser.proxy)
