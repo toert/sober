@@ -164,7 +164,7 @@ def fetch_dashboard_open_trades(client):
 
 def fetch_dashboard_released_trades(client):
     return client.call(method='get',
-                       url='/api/dashboard/released')
+                       url='/api/dashboard/released/')
 
 
 def fetch_msg_history(client, trade_contact_id):

@@ -92,7 +92,7 @@ class Connection():
                     message = str(nonce) + str(self.hmac_key) + str(url)
                     if api_request.body:
                         message += str(api_request.body)
-                    signature = hmac_lib.new(str(self.hmac_secret), msg=message, digestmod=hashlib.sha256).hexdigest().upper()
+                    signature = hmac_lib.new(self.hmac_secret.encode('utf-8'), msg=message.encode('utf-8'), digestmod=hashlib.sha256).hexdigest().upper()
 
                     # Store signature and other stuff to headers
                     api_request.headers['Apiauth-Key'] = self.hmac_key
