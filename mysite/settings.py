@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CELERYBEAT_SCHEDULE = {
     'update_list_of_ads': {
         'task': 'bot.tasks.update_list_of_all_ads',
-        'schedule': timedelta(minutes=os.getenv('delay'))
+        'schedule': timedelta(minutes=float(os.getenv('delay')))
     }
 }
 
