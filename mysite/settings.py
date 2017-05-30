@@ -25,10 +25,14 @@ CELERYBEAT_SCHEDULE = {
     'update_list_of_ads': {
         'task': 'bot.tasks.update_list_of_all_ads',
         'schedule': timedelta(minutes=float(os.getenv('delay')))
+    },
+    'update_dashboards': {
+        'task': 'bot.tasks.update_dashboard_task',
+        'schedule': timedelta(seconds=30)
     }
 }
 
-CELERYD_CONCURRENCY = 15
+CELERYD_CONCURRENCY = 10
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'u10!-@clbva8=n4ui=64-y6!e7249(&!#bgtw=qv$b_qvi5t%7'
@@ -36,7 +40,7 @@ SECRET_KEY = 'u10!-@clbva8=n4ui=64-y6!e7249(&!#bgtw=qv$b_qvi5t%7'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['207.154.217.38', '0.0.0.0']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -48,7 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'bot',
+    'bot'
 ]
 
 MIDDLEWARE = [
