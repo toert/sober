@@ -131,7 +131,7 @@ class Connection():
                     # No JSONic response, or interrupt, better just give up
                     pass
 
-                return response
+                return response.json()
 
         raise Exception(u'No OAuth2 or HMAC connection initialized!')
 

@@ -194,9 +194,9 @@ def queryset_to_list(queryset):
 
 
 def update_dashboard(user):
-    client = hmac(user.localuser.hmac_key,
-                  user.localuser.hmac_secret,
-                  user.localuser.proxy)
+    client = hmac(user.hmac_key,
+                  user.hmac_secret,
+                  user.proxy)
     open_trades = fetch_dashboard_open_trades(client)
     for trade in open_trades['data']['contact_list']:
         trade_msg_history = fetch_msg_history(client, trade['data']['contact_id'])
