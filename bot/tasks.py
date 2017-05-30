@@ -1,7 +1,7 @@
 from .lbcapi import hmac, Connection
 from datetime import datetime
 from time import mktime, sleep, time
-from .models import Ad
+from .models import Ad, LocalUser
 from re import sub
 from celery.task import task
 from os import getenv
@@ -159,6 +159,65 @@ def rollback_ad_price(ad, price_rollback):
     ad.save()
 
 
+def fetch_dashboard_open_trades(client):
+    return client.call(method='get',
+                       url='/api/dashboard/',
+                       params='')
+
+
+def fetch_dashboard_released_trades(client):
+    return client.call(method='get',
+                       url='/api/dashboard/released',
+                       params='')
+
+
+def fetch_msg_history(client, trade_contact_id):
+    return client.call(method='get',
+                       url='/api/contact_messages/{}/'.format(trade_contact_id),
+                       params='')
+
+
+def check_trade_condition(trade_msg_history, start_msg, finish_msg):
+    for msg in trade_msg_history['message_list']:
+        if msg['msg'] == finish_msg:
+            return 'already_finished'
+        elif msg['msg'] == start_msg:
+            return 'already_started'
+
+
+def send_msg(client, trade_contact_id, msg):
+    params = {
+        'msg': msg
+    }
+    return client.call(method='post',
+                       url='/api/contact_message_post/{}/'.format(trade_contact_id),
+                       params=params)
+
+
+def queryset_to_list(queryset):
+    return [result[0] for result in list(queryset)]
+
+
+def update_dashboard(user):
+    client = hmac(user.localuser.hmac_key,
+                  user.localuser.hmac_secret,
+                  user.localuser.proxy)
+    open_trades = fetch_dashboard_open_trades(client)
+    for trade in open_trades['data']['contact_list']:
+        trade_msg_history = fetch_msg_history(client, trade['data']['contact_id'])
+        trade_last_three_symbols = str(trade['data']['contact_id'])[:-3]
+        ad = Ad.objects.get(id=trade['data']['advertisement']['id'])
+        if check_trade_condition(trade_msg_history, ad.start_msg, ad.finish_msg) != 'already_started':
+            msg = '{}\nКомментарий: {}'.format(ad.start_msg, trade_last_three_symbols)
+            send_msg(client, trade['data']['contact_id'], msg)
+    released_trades = fetch_dashboard_released_trades(client)
+    for trade in released_trades['data']['contact_list']:
+        trade_msg_history = fetch_msg_history(client, trade['data']['contact_id'])
+        ad = Ad.objects.get(id=trade['data']['advertisement']['id'])
+        if check_trade_condition(trade_msg_history, ad.start_msg, ad.finish_msg) != 'already_finished':
+            send_msg(client, trade['data']['contact_id'], ad.finish_msg)
+
+
 def update_ad_bot(ad, client):
     all_ads_json = fetch_all_ads_json(ad.direction, ad.online_provider, ad.get_invisible_trade_ids_as_list(), client)
     if ad.is_top_fifteen:
@@ -171,23 +230,17 @@ def update_ad_bot(ad, client):
     return ad
 
 
-def queryset_to_list(queryset):
-    return [result[0] for result in list(queryset)]
-
-
 @task
 def update_list_of_all_ads():
-    all_ad_ids_list = queryset_to_list(Ad.objects.values_list('id'))
-    update_ad.apply_async(all_ad_ids_list)
+    update_ad.apply_async(queryset_to_list(Ad.objects.all))
 
 
 @task
-def update_ad(ad_id):
-    ad = Ad.objects.get(id=ad_id)
+def update_ad(ad):
     client = hmac(ad.user.localuser.hmac_key,
                   ad.user.localuser.hmac_secret,
                   ad.user.localuser.proxy)
-    delay = float(getenv('delay')) * 60
+    delay = float(getenv('delay'))
     start_time = time()
     while time() - start_time < delay:
         if ad.is_updated:
@@ -203,3 +256,9 @@ def update_ad(ad_id):
             sleep(ad.rollback_time)
         elif time() - start_time < delay:
             sleep(60)
+
+
+@task
+def update_dashboard_task():
+    for user in queryset_to_list(LocalUser.objects.all):
+        update_dashboard(user)
