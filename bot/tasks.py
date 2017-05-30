@@ -45,8 +45,7 @@ def fetch_ads_from_invisible_logins(invisible_logins, client):
 
 def fetch_ad_from_trade_id(trade_id, client):
     return client.call(method='get',
-                       url='/api/ad-get/{}/'.format(trade_id),
-                       params='')['data']['ad_list'][0]
+                       url='/api/ad-get/{}/'.format(trade_id))['data']['ad_list'][0]
 
 
 def convert_date_to_timestamp(date):
@@ -59,8 +58,7 @@ def convert_date_to_timestamp(date):
 
 def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
     all_ads = client.call(method='get',
-                          url='/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider),
-                          params='')
+                          url='/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider))
     for id in invisible_trade_ids:
         all_ads['data']['ad_list'].append(fetch_ad_from_trade_id(id, client))
     return all_ads
@@ -161,20 +159,17 @@ def rollback_ad_price(ad, price_rollback):
 
 def fetch_dashboard_open_trades(client):
     return client.call(method='get',
-                       url='/api/dashboard/',
-                       params='')
+                       url='/api/dashboard/')
 
 
 def fetch_dashboard_released_trades(client):
     return client.call(method='get',
-                       url='/api/dashboard/released',
-                       params='')
+                       url='/api/dashboard/released')
 
 
 def fetch_msg_history(client, trade_contact_id):
     return client.call(method='get',
-                       url='/api/contact_messages/{}/'.format(trade_contact_id),
-                       params='')
+                       url='/api/contact_messages/{}/'.format(trade_contact_id))
 
 
 def check_trade_condition(trade_msg_history, start_msg, finish_msg):
