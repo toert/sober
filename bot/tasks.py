@@ -225,6 +225,7 @@ def update_list_of_all_ads():
 
 @task
 def update_ad(self, ad):
+    print('Начал работать с {}'.format(ad.ad_id))
     client = LocalBitcoin(ad.user.localuser.hmac_key,
                           ad.user.localuser.hmac_secret,
                           ad.user.localuser.proxy)
@@ -238,6 +239,7 @@ def update_ad(self, ad):
                 ad = update_ad_bot(ad, client)
                 if not float(ad.price_equation) == float(old_price):
                     ad.current_step += 1
+                print('{} loop'.format(ad.ad_id))
                 ad.save()
             rollback_ad_price(ad, ad.price_rollback)
             edit_ad(ad, client)
