@@ -232,17 +232,19 @@ def update_ad(self, ad):
     client = LocalBitcoin(ad.user.localuser.hmac_key,
                           ad.user.localuser.hmac_secret,
                           ad.user.localuser.proxy)
-    delay = float(getenv('delay'))
+    delay = float(getenv('delay'))*60
     start_time = time()
     while time() - start_time < delay:
         if ad.is_updated:
             ad.current_step = 1
             while ad.current_step < ad.steps_quantity and time() - start_time < delay:
+                print('{} шаг {}'.format(ad.ad_id, ad.current_step))
                 old_price = ad.price_equation
                 ad = update_ad_bot(ad, client)
                 if not float(ad.price_equation) == float(old_price):
                     ad.current_step += 1
                 print('{} loop'.format(ad.ad_id))
+                print('{} шаг {}'.format(ad.ad_id, ad.current_step))
                 ad.save()
             print('{} пошел спать'.format(ad.ad_id))
             rollback_ad_price(ad, ad.price_rollback)
