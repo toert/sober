@@ -7,7 +7,6 @@ from urllib.parse import urlencode
 from datetime import datetime
 
 
-
 class LocalBitcoin:
 
     baseurl = 'https://localbitcoins.net'

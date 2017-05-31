@@ -1,4 +1,4 @@
-from .lbcapi import hmac, Connection
+from .localbitcoin_api import LocalBitcoin
 from datetime import datetime
 from time import mktime, sleep, time
 from .models import Ad, LocalUser
@@ -28,24 +28,19 @@ def edit_ad(ad, client):
         'details-phone_number': ad.phone_number,  # Специальное поле при Payment method: QIWI (QIWI)
         'visible': ad.is_visible
     }
-    client.call(method='post',
-                url='/api/ad/{}/'.format(ad.ad_id),
-                params=params)
+    client.sendRequest(endpoint='/api/ad/{}/'.format(ad.ad_id),
+                       params=params,
+                       method='post')
 
 
-def fetch_ads_from_invisible_logins(invisible_logins, client):
-    invisible_logins_string = ",".join(invisible_logins)
-    params = {
-        'ads': invisible_logins_string
-    }
-    return client.call(method='get',
-                       url='/api/ad-get/',
-                       params=params)
+def fetch_ads_from_trade_id(invisible_logins, client):
+    return client.get_ads(invisible_logins)
 
 
 def fetch_ad_from_trade_id(trade_id, client):
-    return client.call(method='get',
-                       url='/api/ad-get/{}/'.format(trade_id))['data']['ad_list'][0]
+    return client.sendRequest(endpoint='/api/ad-get/{}/'.format(trade_id),
+                              params='',
+                              method='get')['data']['ad_list'][0]
 
 
 def convert_date_to_timestamp(date):
@@ -57,10 +52,10 @@ def convert_date_to_timestamp(date):
 
 
 def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
-    all_ads = client.call(method='get',
-                          url='/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider))
-    for id in invisible_trade_ids:
-        all_ads['data']['ad_list'].append(fetch_ad_from_trade_id(id, client))
+    all_ads = client.sendRequest(endpoint='/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider),
+                                 params='',
+                                 method='get')
+    all_ads['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
     return all_ads
 
 
@@ -158,18 +153,21 @@ def rollback_ad_price(ad, price_rollback):
 
 
 def fetch_dashboard_open_trades(client):
-    return client.call(method='get',
-                       url='/api/dashboard/')
+    return client.sendRequest(endpoint='/api/dashboard/',
+                              params='',
+                              method='get')
 
 
 def fetch_dashboard_released_trades(client):
-    return client.call(method='get',
-                       url='/api/dashboard/released/')
+    return client.sendRequest(endpoint='/api/dashboard/released/',
+                              params='',
+                              method='get')
 
 
 def fetch_msg_history(client, trade_contact_id):
-    return client.call(method='get',
-                       url='/api/contact_messages/{}/'.format(trade_contact_id))
+    return client.sendRequest(endpoint='/api/contact_messages/{}/'.format(trade_contact_id),
+                              params='',
+                              method='get')
 
 
 def check_trade_condition(trade_msg_history, start_msg, finish_msg):
@@ -184,9 +182,9 @@ def send_msg(client, trade_contact_id, msg):
     params = {
         'msg': msg
     }
-    return client.call(method='post',
-                       url='/api/contact_message_post/{}/'.format(trade_contact_id),
-                       params=params)
+    return client.sendRequest(endpoint='/api/contact_message_post/{}/'.format(trade_contact_id),
+                              params=params,
+                              method='post')
 
 
 def queryset_to_list(queryset):
@@ -194,9 +192,9 @@ def queryset_to_list(queryset):
 
 
 def update_dashboard(user):
-    client = hmac(user.hmac_key,
-                  user.hmac_secret,
-                  user.proxy)
+    client = LocalBitcoin(user.hmac_key,
+                          user.hmac_secret,
+                          user.proxy)
     open_trades = fetch_dashboard_open_trades(client)
     for trade in open_trades['data']['contact_list']:
         trade_msg_history = fetch_msg_history(client, trade['data']['contact_id'])
@@ -232,9 +230,9 @@ def update_list_of_all_ads():
 
 @task
 def update_ad(self, ad):
-    client = hmac(ad.user.localuser.hmac_key,
-                  ad.user.localuser.hmac_secret,
-                  ad.user.localuser.proxy)
+    client = LocalBitcoin(ad.user.localuser.hmac_key,
+                          ad.user.localuser.hmac_secret,
+                          ad.user.localuser.proxy)
     delay = float(getenv('delay'))
     start_time = time()
     while time() - start_time < delay:
