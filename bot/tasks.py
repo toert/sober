@@ -251,5 +251,7 @@ def update_ad(self, ad):
 
 @task
 def update_dashboard_task():
+    print('Пошел проверять дашборды')
     for user in queryset_to_list(LocalUser.objects.all()):
         update_dashboard(user)
+        print('Проверил дашборд пользователя {}'.format(user.login))
