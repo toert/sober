@@ -182,8 +182,13 @@ def send_msg(client, trade_contact_id, msg):
                               method='post')
 
 
+#def queryset_to_list(queryset):
+#    return [object for object in queryset]
+
+
 def queryset_to_list(queryset):
-    return [object for object in queryset]
+    return [result[0] for result in list(queryset)]
+
 
 
 def update_dashboard(user):
