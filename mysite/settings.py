@@ -26,10 +26,10 @@ CELERYBEAT_SCHEDULE = {
         'task': 'bot.tasks.update_list_of_all_ads',
         'schedule': timedelta(minutes=float(os.getenv('delay')))
     },
-    'update_dashboards': {
-        'task': 'bot.tasks.update_dashboard_task',
-        'schedule': timedelta(seconds=30)
-    }
+    #'update_dashboards': {
+    #    'task': 'bot.tasks.update_dashboard_task',
+    #    'schedule': timedelta(seconds=30)
+    #}
 }
 
 CELERYD_CONCURRENCY = 10
