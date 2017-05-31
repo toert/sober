@@ -154,7 +154,7 @@ class Connection():
         self.hmac_key = None
         self.hmac_secret = None
 
-    def _set_hmac(self, server, hmac_key, hmac_secret, proxies):
+    def _set_hmac(self, server, hmac_key, hmac_secret, proxies=None):
         self.server = server
         self.proxy = proxies
         self.client_id = None
@@ -164,3 +164,25 @@ class Connection():
         self.expiry_seconds = None
         self.hmac_key = hmac_key
         self.hmac_secret = hmac_secret
+
+if __name__ == '__main__':
+    client = Connection()
+    client._set_hmac( 'https://localbitcoins.net','a77ae8d32c1cce099a65388c0791b65d',
+                          '8fbcd2c95f340b3d6fc43938b4e8bfc9ecabc57d0cb82ddefcf8f4accb047d03',)
+    params = {
+        'price_equation': '100000.3',
+        'lat': 58,
+        'lon': 61,
+        'city': 'Moscow',
+        'location_string': 'Moscow',
+        'countrycode': 'RU',
+        'currency': 'RUB',
+        'account_info': 'TEST',
+        'bank_name': 'Сбербанк',
+        'msg': 'TEST',
+        'sms_verification_required': False,
+        'track_max_amount': False,
+        'require_trusted_by_advertiser': False,
+        'require_identification': False
+    }
+    print(client.call('get','/api/ad-get/', {'ads': '222222,234563'}))
