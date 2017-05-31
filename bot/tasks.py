@@ -207,6 +207,7 @@ def update_dashboard(user):
 
 
 def update_ad_bot(ad, client):
+    print('Начал обновлять {}'.format(ad.ad_id))
     all_ads_json = fetch_all_ads_json(ad.direction, ad.online_provider, ad.get_invisible_trade_ids_as_list(), client)
     if ad.is_top_fifteen:
         all_ads_json['data']['ad_list'] = all_ads_json['data']['ad_list'][:15]
@@ -215,6 +216,7 @@ def update_ad_bot(ad, client):
     filtered_ads = get_filtered_ads(sorted_ads, ad)
     update_ad_price(filtered_ads, ad)
     edit_ad(ad, client)
+    print('Закончил обновлять {}'.format(ad.ad_id))
     return ad
 
 
@@ -242,6 +244,7 @@ def update_ad(self, ad):
                     ad.current_step += 1
                 print('{} loop'.format(ad.ad_id))
                 ad.save()
+            print('{} пошел спать'.format(ad.ad_id))
             rollback_ad_price(ad, ad.price_rollback)
             edit_ad(ad, client)
             sleep(ad.rollback_time)
