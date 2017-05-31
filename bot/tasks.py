@@ -222,12 +222,15 @@ def update_ad_bot(ad, client):
 
 @task
 def update_list_of_all_ads():
-    print('Список всех объявлений: {}'.format(queryset_to_list(Ad.objects.all())))
-    update_ad.apply_async(queryset_to_list(Ad.objects.all()))
+    #print('Список всех объявлений: {}'.format(queryset_to_list(Ad.objects.all())))
+    #update_ad.apply_async(queryset_to_list(Ad.objects.all()))
+    print('Список всех объявлений: {}'.format(queryset_to_list(Ad.objects.values_list('id'))))
+    update_ad.apply_async(queryset_to_list(Ad.objects.values_list('id')))
 
 
 @task
-def update_ad(self, ad):
+def update_ad(self, ad_id):
+    ad = Ad.objects.get(id=ad_id)
     print('Начал работать с {}'.format(ad.ad_id))
     client = LocalBitcoin(ad.user.localuser.hmac_key,
                           ad.user.localuser.hmac_secret,
