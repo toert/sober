@@ -40,7 +40,7 @@ SECRET_KEY = 'u10!-@clbva8=n4ui=64-y6!e7249(&!#bgtw=qv$b_qvi5t%7'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['207.154.217.38', '0.0.0.0']
 
 
 # Application definition

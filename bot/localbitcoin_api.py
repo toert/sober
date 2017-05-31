@@ -102,7 +102,7 @@ class LocalBitcoin:
 
 
 if __name__ == '__main__':
-    proxy = "83.219.142.133:3128"
+    proxy = "toert:135531q@23.81.109.49:19867"
     proxies = {
         "http": 'http://{}'.format(proxy),
         "https": 'https://{}'.format(proxy),
@@ -128,4 +128,7 @@ if __name__ == '__main__':
         'require_trusted_by_advertiser': False,
         'require_identification': False
     }
-    print(client.get_ads([234523, 223444, 565564, 397416]))
+    #print(client.get_ads([234523, 223444, 565564, 397416]))
+    print(client.sendRequest(endpoint='/api/dashboard/released/',
+                              params='',
+                              method='get'))
