@@ -220,6 +220,7 @@ def update_ad_bot(ad, client):
 
 @task
 def update_list_of_all_ads():
+    print('Список всех объявлений: {}'.format(queryset_to_list(Ad.objects.all())))
     update_ad.apply_async(queryset_to_list(Ad.objects.all()))
 
 
