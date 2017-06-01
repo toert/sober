@@ -50,6 +50,7 @@ def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
                                  params='',
                                  method='get')
     if not invisible_trade_ids == []:
+        print(all_ads)
         all_ads['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
     return all_ads
 
@@ -223,12 +224,13 @@ def update_ad_bot(ad, client):
 @task
 def update_list_of_all_ads():
     print('Список всех объявлений: {}'.format(queryset_to_list(Ad.objects.all())))
-    delay = float(getenv('delay'))*60
-    update_ad.apply_async(queryset_to_list(Ad.objects.all()), expires=float(delay)*60)
+    for ad in Ad.objects.all():
+        print('{}, я вызываю тебя!'.format(ad.ad_id))
+        update_ad.delay(ad)
 
 
 @task
-def update_ad(self, ad):
+def update_ad(ad):
     print('Начал работать с {}'.format(ad.ad_id))
     client = LocalBitcoin(ad.user.localuser.hmac_key,
                           ad.user.localuser.hmac_secret,
@@ -245,7 +247,7 @@ def update_ad(self, ad):
                 if not float(ad.price_equation) == float(old_price):
                     ad.current_step += 1
                 print('{} loop'.format(ad.ad_id))
-                print('{} шаг {}'.format(ad.ad_id, ad.current_step))
+                print('-----')
                 ad.save()
             print('{} пошел спать'.format(ad.ad_id))
             rollback_ad_price(ad, ad.price_rollback)
@@ -260,4 +262,4 @@ def update_dashboard_task():
     print('Пошел проверять дашборды')
     for user in queryset_to_list(LocalUser.objects.all()):
         update_dashboard(user)
-        print('Проверил дашборд пользователя {}'.format(user.login))
+        print('----- Проверил дашборд пользователя {} -----'.format(user.login))

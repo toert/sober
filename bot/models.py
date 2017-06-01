@@ -15,7 +15,7 @@ class LocalUser(models.Model):
     login = models.CharField(max_length=40, db_index=True, verbose_name='Логин', default='')
     hmac_key = models.CharField(max_length=140, db_index=True, verbose_name='HMAC ключ')
     hmac_secret = models.CharField(max_length=140, verbose_name='HMAC пароль')
-    proxy = models.CharField(max_length=140, verbose_name='Прокси-адрес', default='')
+    proxy = models.CharField(max_length=140, verbose_name='Прокси-адрес', default='', blank=True)
 
     @receiver(post_save, sender=User)
     def create_user_profile(sender, instance, created, **kwargs):

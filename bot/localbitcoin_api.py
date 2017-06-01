@@ -39,7 +39,7 @@ class LocalBitcoin:
                 "Apiauth-Nonce": str(nonce),
                 "Apiauth-Signature": signature,
             }
-            if self.proxy:
+            if self.proxy is not None:
                 response = requests.get(self.baseurl + url, params=params, headers=headers, proxies=self.proxy)
             else:
                 response = requests.get(self.baseurl + url, params=params, headers=headers)
@@ -66,39 +66,49 @@ class LocalBitcoin:
             if method == 'get':
               params_encoded = '?' + params_encoded
 
-        now = datetime.utcnow()
-        epoch = datetime.utcfromtimestamp(0)
-        delta = now - epoch
-        nonce = int(delta.total_seconds() * 1000)
+        while True:
+            now = datetime.utcnow()
+            epoch = datetime.utcfromtimestamp(0)
+            delta = now - epoch
+            nonce = int(delta.total_seconds() * 1000)
 
-        message = str(nonce) + self.hmac_auth_key + endpoint + params_encoded
-        signature = hmac.new(self.hmac_auth_secret.encode('utf-8'),
-                             msg = message.encode('utf-8'),
-                             digestmod = hashlib.sha256).hexdigest().upper()
+            message = str(nonce) + self.hmac_auth_key + endpoint + params_encoded
+            signature = hmac.new(self.hmac_auth_secret.encode('utf-8'),
+                                 msg = message.encode('utf-8'),
+                                 digestmod = hashlib.sha256).hexdigest().upper()
 
-        headers = {}
-        headers['Apiauth-key'] = self.hmac_auth_key
-        headers['Apiauth-Nonce'] = str(nonce)
-        headers['Apiauth-Signature'] = signature
-        if method == 'get':
-            if self.proxy:
-                response = requests.get(self.baseurl + endpoint, headers = headers, params = params, proxies=self.proxy)
+            headers = {}
+            headers['Apiauth-key'] = self.hmac_auth_key
+            headers['Apiauth-Nonce'] = str(nonce)
+            headers['Apiauth-Signature'] = signature
+            if method == 'get':
+                if self.proxy is not None:
+                    response = requests.get(self.baseurl + endpoint, headers = headers, params = params, proxies=self.proxy)
+                else:
+                    response = requests.get(self.baseurl + endpoint, headers = headers, params = params)
             else:
-                response = requests.get(self.baseurl + endpoint, headers = headers, params = params)
-        else:
-            if self.proxy:
-                response = requests.post(self.baseurl + endpoint, headers = headers, data = params, proxies=self.proxy)
-            else:
-                response = requests.post(self.baseurl + endpoint, headers = headers, data = params)
-
-
-        if self.debug == True:
-            print ('REQUEST: ' + self.baseurl + endpoint)
-            print ('PARAMS: ' + str(params))
-            print ('METHOD: ' + method)
-            print ('RESPONSE: ' + response.text)
-
-        return json.loads(response.text)
+                if self.proxy is not None:
+                    response = requests.post(self.baseurl + endpoint, headers = headers, data = params, proxies=self.proxy)
+                else:
+                    response = requests.post(self.baseurl + endpoint, headers = headers, data = params)
+            try:
+                response_json = response.json()
+                if response_json.get('error', {}).get('error_code') == '42':
+                    time.sleep(0.1)
+                    print('FÅxCVvczø')
+                    continue
+                print('NOT ERROR')
+            except:
+                # No JSONic response, or interrupt, better just give up
+                print('NOT FOCAVHJBKLM:MBVCGFHJBKNL')
+            print('_________@!@________')
+            if self.debug == True:
+                print ('REQUEST: ' + self.baseurl + endpoint)
+                print ('PARAMS: ' + str(params))
+                print ('METHOD: ' + method)
+                print ('RESPONSE: ' + response.text)
+            print(response.text[30:45])
+            return json.loads(response.text)
 
 
 if __name__ == '__main__':
