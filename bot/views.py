@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.urls import reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from .forms import CreateBot, HmacForm, HorizontalForm
 from .models import Ad, LocalUser
@@ -69,8 +69,12 @@ def change_bot_from_vertical(request, bot_id):
             form.save()
             return HttpResponseRedirect(reverse('render_dashboard'))
         print('Fucked up!')
-    form = CreateBot(request.POST or None, instance=ad_instanse)
-    return render(request, 'create.html', {'form': form})
+    if ad_instanse.user == request.user:
+        form = CreateBot(request.POST or None, instance=ad_instanse)
+        return render(request, 'create.html', {'form': form})
+    else:
+        return HttpResponseForbidden()
+
 
 
 def update_table(request):

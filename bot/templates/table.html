@@ -18,7 +18,7 @@
           <th></th> 
         </tr>
         {% for ad in ads %}
-        <tr {% if ad.is_updated %}class="gray"
+        <tr {% if not ad.is_updated %}class="gray"
             {% elif ad.direction == 'sell' %}class="green"
             {% elif ad.direction == 'buy' %}class="red"{% endif %}>
         <form action="/edit/{{ad.id}}" method="post">

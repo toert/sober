@@ -58,9 +58,9 @@ def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
             error_count += 1
             sleep(1 * error_count)
             continue
-    if not invisible_trade_ids == []:
-        all_ads['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
-    return all_ads.json()
+        if not invisible_trade_ids == []:
+            all_ads['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
+        return all_ads.json()
 
 
 def sort_ads_by_price(all_ads, direction):
@@ -235,13 +235,11 @@ def update_ad_bot(ad, client):
 def update_list_of_all_ads():
     print('Список всех объявлений: {}'.format(queryset_to_list(Ad.objects.all())))
     for ad in Ad.objects.all():
-        print('{}, я вызываю тебя!'.format(ad.ad_id))
         update_ad.delay(ad)
 
 
 @task
 def update_ad(ad):
-    print('Начал работать с {}'.format(ad.ad_id))
     client = LocalBitcoin(ad.user.localuser.hmac_key,
                           ad.user.localuser.hmac_secret,
                           ad.user.localuser.proxy)
@@ -249,6 +247,7 @@ def update_ad(ad):
     start_time = time()
     while time() - start_time < delay:
         if ad.is_updated:
+            print('Начал работать с {}'.format(ad.ad_id))
             ad.current_step = 1
             while ad.current_step < ad.steps_quantity and time() - start_time < delay:
                 start_time = time()
