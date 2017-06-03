@@ -60,7 +60,7 @@ def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
             continue
     if not invisible_trade_ids == []:
         all_ads['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
-    return all_ads
+    return all_ads.json()
 
 
 def sort_ads_by_price(all_ads, direction):
