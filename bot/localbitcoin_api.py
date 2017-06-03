@@ -107,7 +107,6 @@ class LocalBitcoin:
                 print ('PARAMS: ' + str(params))
                 print ('METHOD: ' + method)
                 print ('RESPONSE: ' + response.text)
-            print(response.text[30:45])
             return json.loads(response.text)
 
 

@@ -212,16 +212,18 @@ def update_dashboard(user):
 
 
 def update_ad_bot(ad, client):
-    print('Начал обновлять {}'.format(ad.ad_id))
+    start_time = time.time()
     all_ads_json = fetch_all_ads_json(ad.direction, ad.online_provider, ad.get_invisible_trade_ids_as_list(), client)
+    print("Получил стакан {} за {} секунд".format(ad.ad_id, time.time() - start_time))
     if ad.is_top_fifteen:
         all_ads_json['data']['ad_list'] = all_ads_json['data']['ad_list'][:15]
     ad.current_ad_position = get_own_ad_current_position(ad.ad_id, all_ads_json)
     sorted_ads = sort_ads_by_price(all_ads_json, ad.direction)
     filtered_ads = get_filtered_ads(sorted_ads, ad)
     update_ad_price(filtered_ads, ad)
+    start_time = time.time()
     edit_ad(ad, client)
-    print('Закончил обновлять {}'.format(ad.ad_id))
+    print("Изменил {} за {} секунд".format(ad.ad_id, time.time() - start_time))
     return ad
 
 
@@ -245,14 +247,13 @@ def update_ad(ad):
         if ad.is_updated:
             ad.current_step = 1
             while ad.current_step < ad.steps_quantity and time() - start_time < delay:
-                print('{} шаг {}'.format(ad.ad_id, ad.current_step))
+                start_time = time.time()
                 old_price = ad.price_equation
                 ad = update_ad_bot(ad, client)
                 if not float(ad.price_equation) == float(old_price):
                     ad.current_step += 1
-                print('{} loop'.format(ad.ad_id))
-                print('-----')
                 ad.save()
+                print("Закончил обновлять {} за {} секунд" .format(ad.ad_id, time.time() - start_time))
             print('{} пошел спать'.format(ad.ad_id))
             rollback_ad_price(ad, ad.price_rollback)
             edit_ad(ad, client)
