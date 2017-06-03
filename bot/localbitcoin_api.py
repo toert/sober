@@ -47,13 +47,14 @@ class LocalBitcoin:
 
                 # If HMAC Nonce is already used, then wait a little and try again
             try:
-                response_json = response.json()
+                response_json = response.json()['data']
                 if response_json.get('error', {}).get('error_code') == '42':
                     time.sleep(0.1)
                     continue
             except:
                 # No JSONic response, or interrupt, better just give up
-                pass
+                time.sleep(0.2)
+                continue
             print(response.text)
             return response.json()
 
@@ -93,15 +94,14 @@ class LocalBitcoin:
                     response = requests.post(self.baseurl + endpoint, headers = headers, data = params)
             try:
                 response_json = response.json()
+                _ = response_json['data']
                 if response_json.get('error', {}).get('error_code') == '42':
                     time.sleep(0.1)
-                    print('FÅxCVvczø')
                     continue
-                print('NOT ERROR')
             except:
                 # No JSONic response, or interrupt, better just give up
-                print('NOT FOCAVHJBKLM:MBVCGFHJBKNL')
-            print('_________@!@________')
+                time.sleep(0.2)
+                continue
             if self.debug == True:
                 print ('REQUEST: ' + self.baseurl + endpoint)
                 print ('PARAMS: ' + str(params))

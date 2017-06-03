@@ -5,6 +5,7 @@ from .models import Ad, LocalUser
 from re import sub
 from celery.task import task
 from os import getenv
+import requests
 
 
 def edit_ad(ad, client):
@@ -46,9 +47,12 @@ def convert_date_to_timestamp(date):
 
 
 def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
-    all_ads = client.sendRequest(endpoint='/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider),
-                                 params='',
-                                 method='get')
+    import random
+    sleep(random.randint(0,10) / 10)
+    all_ads = requests.get('https://localbitcoins.net/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider))
+    print(all_ads.text[:50])
+    all_ads = all_ads.json()
+
     if not invisible_trade_ids == []:
         print(all_ads)
         all_ads['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
@@ -76,6 +80,7 @@ def filter_ads_by_time(all_ads, ad_creation_time_filter):
 
 
 def filter_ads_by_amount(all_ads, min_amount_filter):
+    print(all_ads)
     return list(filter(lambda ad: int(ad['data']['max_amount']) > min_amount_filter, all_ads))
 
 
