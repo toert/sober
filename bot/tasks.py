@@ -56,7 +56,7 @@ def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
             # No JSONic response, or interrupt, better just give up
             print(all_ads.text)
             error_count += 1
-            sleep(0.1 * error_count)
+            sleep(1 * error_count)
             continue
     if not invisible_trade_ids == []:
         all_ads['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
