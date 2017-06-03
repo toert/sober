@@ -47,13 +47,18 @@ def convert_date_to_timestamp(date):
 
 
 def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
-    import random
-    sleep(random.randint(0,10) / 10)
-    all_ads = requests.get('https://localbitcoins.net/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider))
-    all_ads = all_ads.json()
-
+    error_count = 0
+    while error_count < 3:
+        all_ads = requests.get('https://localbitcoins.net/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider))
+        try:
+            response_json = all_ads.json()['data']
+        except:
+            # No JSONic response, or interrupt, better just give up
+            print(all_ads.text)
+            error_count += 1
+            sleep(0.1 * error_count)
+            continue
     if not invisible_trade_ids == []:
-        print(all_ads)
         all_ads['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
     return all_ads
 
