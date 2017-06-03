@@ -80,8 +80,14 @@ def filter_ads_by_time(all_ads, ad_creation_time_filter):
 
 
 def filter_ads_by_amount(all_ads, min_amount_filter):
-    print(all_ads)
-    return list(filter(lambda ad: int(ad['data']['max_amount']) > min_amount_filter, all_ads))
+    filtered_ads = []
+    for ad in all_ads:
+        if ad['data']['max_amount'] == None:
+            filtered_ads.append(ad)
+        else:
+            if int(ad['data']['max_amount']) > min_amount_filter:
+                filtered_ads.append(ad)
+    return filtered_ads
 
 
 def filter_ads_by_delta_amount(all_ads, delta_amount_filter):
