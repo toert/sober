@@ -53,9 +53,8 @@ class LocalBitcoin:
                     continue
             except:
                 # No JSONic response, or interrupt, better just give up
-                time.sleep(0.2)
+                time.sleep(0.1)
                 continue
-            print(response.text)
             return response.json()
 
 
@@ -100,7 +99,7 @@ class LocalBitcoin:
                     continue
             except:
                 # No JSONic response, or interrupt, better just give up
-                time.sleep(0.2)
+                time.sleep(0.1)
                 continue
             if self.debug == True:
                 print ('REQUEST: ' + self.baseurl + endpoint)
