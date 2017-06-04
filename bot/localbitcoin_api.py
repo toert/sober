@@ -51,15 +51,12 @@ class LocalBitcoin:
                 response_json = response.json()['data']
             except:
                 # No JSONic response, or interrupt, better just give up
-<<<<<<< HEAD
                 time.sleep(0.2)
                 continue
-=======
                 error_count += 1
                 time.sleep(0.1 * error_count)
                 if error_count < 3:
                     continue
->>>>>>> 0aba55afeedf9a845d200d2533a266375fb7b0d2
             return response.json()
 
     def sendRequest(self, endpoint, params, method):
