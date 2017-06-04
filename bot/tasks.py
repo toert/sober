@@ -47,16 +47,20 @@ def convert_date_to_timestamp(date):
 
 
 def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
-    import random
-    sleep(random.randint(0,10) / 10)
-    all_ads = requests.get('https://localbitcoins.net/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider))
-    print(all_ads.text[:50])
-    all_ads = all_ads.json()
-
-    if not invisible_trade_ids == []:
-        print(all_ads)
-        all_ads['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
-    return all_ads
+    error_count = 0
+    while error_count < 3:
+        all_ads = requests.get('https://localbitcoins.net/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider))
+        try:
+            response_json = all_ads.json()['data']
+        except:
+            # No JSONic response, or interrupt, better just give up
+            print(all_ads.text)
+            error_count += 1
+            sleep(1 * error_count)
+            continue
+        if not invisible_trade_ids == []:
+            all_ads['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
+        return all_ads.json()
 
 
 def sort_ads_by_price(all_ads, direction):
@@ -212,18 +216,18 @@ def update_dashboard(user):
 
 
 def update_ad_bot(ad, client):
-    start_time = time.time()
+    start_time = time()
     all_ads_json = fetch_all_ads_json(ad.direction, ad.online_provider, ad.get_invisible_trade_ids_as_list(), client)
-    print("Получил стакан {} за {} секунд".format(ad.ad_id, time.time() - start_time))
+    print("Получил стакан {} за {} секунд".format(ad.ad_id, time() - start_time))
     if ad.is_top_fifteen:
         all_ads_json['data']['ad_list'] = all_ads_json['data']['ad_list'][:15]
     ad.current_ad_position = get_own_ad_current_position(ad.ad_id, all_ads_json)
     sorted_ads = sort_ads_by_price(all_ads_json, ad.direction)
     filtered_ads = get_filtered_ads(sorted_ads, ad)
     update_ad_price(filtered_ads, ad)
-    start_time = time.time()
+    start_time = time()
     edit_ad(ad, client)
-    print("Изменил {} за {} секунд".format(ad.ad_id, time.time() - start_time))
+    print("Изменил {} за {} секунд".format(ad.ad_id, time() - start_time))
     return ad
 
 
@@ -231,13 +235,11 @@ def update_ad_bot(ad, client):
 def update_list_of_all_ads():
     print('Список всех объявлений: {}'.format(queryset_to_list(Ad.objects.all())))
     for ad in Ad.objects.all():
-        print('{}, я вызываю тебя!'.format(ad.ad_id))
         update_ad.delay(ad)
 
 
 @task
 def update_ad(ad):
-    print('Начал работать с {}'.format(ad.ad_id))
     client = LocalBitcoin(ad.user.localuser.hmac_key,
                           ad.user.localuser.hmac_secret,
                           ad.user.localuser.proxy)
@@ -245,15 +247,16 @@ def update_ad(ad):
     start_time = time()
     while time() - start_time < delay:
         if ad.is_updated:
+            print('Начал работать с {}'.format(ad.ad_id))
             ad.current_step = 1
             while ad.current_step < ad.steps_quantity and time() - start_time < delay:
-                start_time = time.time()
+                start_time = time()
                 old_price = ad.price_equation
                 ad = update_ad_bot(ad, client)
                 if not float(ad.price_equation) == float(old_price):
                     ad.current_step += 1
                 ad.save()
-                print("Закончил обновлять {} за {} секунд" .format(ad.ad_id, time.time() - start_time))
+                print("Закончил обновлять {} за {} секунд" .format(ad.ad_id, time() - start_time))
             print('{} пошел спать'.format(ad.ad_id))
             rollback_ad_price(ad, ad.price_rollback)
             edit_ad(ad, client)

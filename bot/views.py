@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.urls import reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from .forms import CreateBot, HmacForm, HorizontalForm
 from .models import Ad, LocalUser
@@ -28,7 +28,6 @@ def create_bot(request):
         if form.is_valid():
             form.save_with_user(request.user)
             return HttpResponseRedirect(reverse('render_dashboard'))
-        print('Fucked up!')
     form = CreateBot()
     return render(request, 'create.html', {'form': form})
 
@@ -41,7 +40,6 @@ def set_keys_page(request):
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('render_dashboard'))
-        print('Fucked up!')
     form = HmacForm(request.POST or None, instance=localuser_instanse)
     return render(request, 'create.html', {'form': form})
 
@@ -52,25 +50,25 @@ def edit_ad(request, bot_id):
         object = Ad.objects.get(id=bot_id)
         if object.user == request.user:
             form = HorizontalForm(request.POST or None, instance=object)
-            print(form)
             if form.is_valid():
                 form.save()
                 return HttpResponseRedirect(reverse('render_dashboard'))
-            print('Fucked up!')
 
 
 @login_required
 def change_bot_from_vertical(request, bot_id):
-    print(bot_id)
     ad_instanse = Ad.objects.get(id=bot_id)
     if request.method == 'POST' and ad_instanse.user == request.user:
         form = CreateBot(request.POST or None, instance=ad_instanse)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('render_dashboard'))
-        print('Fucked up!')
-    form = CreateBot(request.POST or None, instance=ad_instanse)
-    return render(request, 'create.html', {'form': form})
+    if ad_instanse.user == request.user:
+        form = CreateBot(request.POST or None, instance=ad_instanse)
+        return render(request, 'create.html', {'form': form})
+    else:
+        return HttpResponseForbidden()
+
 
 
 def update_table(request):

@@ -26,6 +26,7 @@ class LocalBitcoin:
         # Convert parameters into list of tuples.
         # This makes request encoding to keep the order
         params = params.items()
+        error_count = 0
 
         while True:
 
@@ -48,15 +49,18 @@ class LocalBitcoin:
                 # If HMAC Nonce is already used, then wait a little and try again
             try:
                 response_json = response.json()['data']
-                if response_json.get('error', {}).get('error_code') == '42':
-                    time.sleep(0.1)
-                    continue
             except:
                 # No JSONic response, or interrupt, better just give up
+<<<<<<< HEAD
                 time.sleep(0.2)
                 continue
+=======
+                error_count += 1
+                time.sleep(0.1 * error_count)
+                if error_count < 3:
+                    continue
+>>>>>>> 0aba55afeedf9a845d200d2533a266375fb7b0d2
             return response.json()
-
 
     def sendRequest(self, endpoint, params, method):
 
@@ -65,7 +69,7 @@ class LocalBitcoin:
             params_encoded = urlencode(params)
             if method == 'get':
               params_encoded = '?' + params_encoded
-
+        error_count = 0
         while True:
             now = datetime.utcnow()
             epoch = datetime.utcfromtimestamp(0)
@@ -92,15 +96,13 @@ class LocalBitcoin:
                 else:
                     response = requests.post(self.baseurl + endpoint, headers = headers, data = params)
             try:
-                response_json = response.json()
-                _ = response_json['data']
-                if response_json.get('error', {}).get('error_code') == '42':
-                    time.sleep(0.1)
-                    continue
+                response_json = response.json()['data']
             except:
                 # No JSONic response, or interrupt, better just give up
-                time.sleep(0.2)
-                continue
+                error_count += 1
+                time.sleep(0.1 * error_count)
+                if error_count < 3:
+                    continue
             if self.debug == True:
                 print ('REQUEST: ' + self.baseurl + endpoint)
                 print ('PARAMS: ' + str(params))
