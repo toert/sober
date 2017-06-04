@@ -75,8 +75,8 @@ def get_own_ad_current_position(own_ad_id, all_ads):
 
 
 def filter_ads_by_time(all_ads, ad_creation_time_filter):
-    return list(filter(lambda ad: convert_date_to_timestamp(ad['data']['created_at']) < convert_date_to_timestamp(
-        ad_creation_time_filter), all_ads))
+    return list(filter(lambda ad: convert_date_to_timestamp(time()) - \
+                                  convert_date_to_timestamp(ad['data']['profile']['last_online'] < ad_creation_time_filter), all_ads))
 
 
 def filter_ads_by_amount(all_ads, min_amount_filter):
@@ -84,8 +84,8 @@ def filter_ads_by_amount(all_ads, min_amount_filter):
 
 
 def filter_ads_by_delta_amount(all_ads, delta_amount_filter):
-    return list(filter(lambda ad: (int(ad['data']['max_amount_available']) - int(ad['data']['min_amount'])) > delta_amount_filter,
-                       all_ads))
+    return list(filter(lambda ad: (int(ad['data']['max_amount_available']) - int(ad['data']['min_amount'])) > \
+                                  delta_amount_filter, all_ads))
 
 
 def filter_ads_by_login_black_list(all_ads, blacklist):

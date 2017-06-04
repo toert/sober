@@ -55,7 +55,6 @@ class LocalBitcoin:
                 # No JSONic response, or interrupt, better just give up
                 time.sleep(0.2)
                 continue
-            print(response.text)
             return response.json()
 
 
@@ -119,8 +118,7 @@ if __name__ == '__main__':
     }
 
     client = LocalBitcoin('a77ae8d32c1cce099a65388c0791b65d',
-                          '8fbcd2c95f340b3d6fc43938b4e8bfc9ecabc57d0cb82ddefcf8f4accb047d03',
-                         proxy=proxies)
+                          '8fbcd2c95f340b3d6fc43938b4e8bfc9ecabc57d0cb82ddefcf8f4accb047d03')
     params = {
         'price_equation': '100000.3',
         'lat': 58,
@@ -138,6 +136,11 @@ if __name__ == '__main__':
         'require_identification': False
     }
     #print(client.get_ads([234523, 223444, 565564, 397416]))
-    print(client.sendRequest(endpoint='/api/dashboard/released/',
-                              params='',
-                              method='get'))
+    import time
+    for i in range(10):
+        st = time.time()
+        print(client.sendRequest(endpoint='/sell-bitcoins-online/RUB/qiwi/.json',
+                                  params='',
+                                  method='get'))
+        time.sleep(0.1)
+        print('{}'.format(time.time() - st))
