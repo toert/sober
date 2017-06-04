@@ -50,16 +50,13 @@ def edit_ad(request, bot_id):
         object = Ad.objects.get(id=bot_id)
         if object.user == request.user:
             form = HorizontalForm(request.POST or None, instance=object)
-            print(form)
             if form.is_valid():
                 form.save()
                 return HttpResponseRedirect(reverse('render_dashboard'))
-            print('Fucked up!')
 
 
 @login_required
 def change_bot_from_vertical(request, bot_id):
-    print(bot_id)
     ad_instanse = Ad.objects.get(id=bot_id)
     if request.method == 'POST' and ad_instanse.user == request.user:
         form = CreateBot(request.POST or None, instance=ad_instanse)
