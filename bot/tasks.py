@@ -29,7 +29,7 @@ def edit_ad(ad, client):
         'details-phone_number': ad.phone_number,  # Специальное поле при Payment method: QIWI (QIWI)
         'visible': ad.is_visible
     }
-    client.sendRequest(endpoint='/api/ad/{}/'.format(ad.ad_id),
+    return client.sendRequest(endpoint='/api/ad/{}/'.format(ad.ad_id),
                        params=params,
                        method='post')
 
@@ -226,7 +226,7 @@ def update_ad_bot(ad, client):
     filtered_ads = get_filtered_ads(sorted_ads, ad)
     update_ad_price(filtered_ads, ad)
     start_time = time()
-    edit_ad(ad, client)
+    print(edit_ad(ad, client))
     print("Изменил {} за {} секунд".format(ad.ad_id, time() - start_time))
     return ad
 
