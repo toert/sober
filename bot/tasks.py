@@ -80,7 +80,7 @@ def get_own_ad_current_position(own_ad_id, all_ads):
 
 def filter_ads_by_time(all_ads, ad_creation_time_filter):
     return list(filter(lambda ad: int(time()) - int(convert_date_to_timestamp(ad['data']['profile']['last_online'])) \
-                                  + 10800 < ad_creation_time_filter, all_ads))
+                                  - 10800 < ad_creation_time_filter, all_ads))
 
 
 def filter_ads_by_amount(all_ads, min_amount_filter):
