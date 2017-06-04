@@ -16,7 +16,7 @@ def edit_ad(ad, client):
         'city': 'Moscow',
         'location_string': 'Moscow',
         'countrycode': 'RU',
-        'currency': ad.currency.upper,
+        'currency': str(ad.currency).upper,
         'account_info': ad.account_info,
         'bank_name': ad.bank_name,
         'msg': ad.msg,
