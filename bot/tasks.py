@@ -233,7 +233,7 @@ def update_ad_bot(ad, client):
 
 @task
 def update_list_of_all_ads():
-    for ad_id in queryset_to_list(Ad.objects.values_list('id')):
+    for ad_id in Ad.objects.values_list('id'):
         update_ad.delay(ad_id)
 
 
