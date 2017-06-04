@@ -65,7 +65,7 @@ class Ad(models.Model):
     amount_limit = models.IntegerField(verbose_name='Предел объема (lim V)')
     min_amount_filter = models.IntegerField(verbose_name='V игнор')
     #ad_creation_time_filter = models.DateTimeField(verbose_name='T игнор')
-    last_online_time = models.IntegerField(verbose_name='Delta V', default=1200)
+    last_online_time = models.IntegerField(verbose_name='T игнор', default=1200)
     delta_amount_filter = models.IntegerField(verbose_name='Delta V')
     phone_number = models.CharField(max_length=11, verbose_name='Номер телефона (при работе с QIWI)')
     step = models.IntegerField(verbose_name='Шаг цены')
