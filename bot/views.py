@@ -28,7 +28,6 @@ def create_bot(request):
         if form.is_valid():
             form.save_with_user(request.user)
             return HttpResponseRedirect(reverse('render_dashboard'))
-        print('Fucked up!')
     form = CreateBot()
     return render(request, 'create.html', {'form': form})
 
@@ -41,7 +40,6 @@ def set_keys_page(request):
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('render_dashboard'))
-        print('Fucked up!')
     form = HmacForm(request.POST or None, instance=localuser_instanse)
     return render(request, 'create.html', {'form': form})
 
@@ -68,7 +66,6 @@ def change_bot_from_vertical(request, bot_id):
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('render_dashboard'))
-        print('Fucked up!')
     if ad_instanse.user == request.user:
         form = CreateBot(request.POST or None, instance=ad_instanse)
         return render(request, 'create.html', {'form': form})
