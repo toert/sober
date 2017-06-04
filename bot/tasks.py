@@ -16,7 +16,7 @@ def edit_ad(ad, client):
         'city': 'Moscow',
         'location_string': 'Moscow',
         'countrycode': 'RU',
-        'currency': ad.currency,
+        'currency': ad.currency.upper,
         'account_info': ad.account_info,
         'bank_name': ad.bank_name,
         'msg': ad.msg,
@@ -26,7 +26,7 @@ def edit_ad(ad, client):
         'require_identification': False,
         'online_provider': ad.online_provider,
         'max_amount': ad.current_amount,
-        'details-phone_number': ad.phone_number,  # Специальное поле при Payment method: QIWI (QIWI)
+        'details-phone_number': ad.phone_number,
         'visible': ad.is_visible
     }
     return client.sendRequest(endpoint='/api/ad/{}/'.format(ad.ad_id),
@@ -46,10 +46,10 @@ def convert_date_to_timestamp(date):
     return mktime(datetime.strptime(date, '%Y-%m-%d %H:%M:%S+00:00').timetuple())
 
 
-def fetch_all_ads_json(direction, online_provider, invisible_trade_ids, client):
+def fetch_all_ads_json(direction, currency, online_provider, invisible_trade_ids, client):
     error_count = 0
     while error_count < 3:
-        all_ads = requests.get('https://localbitcoins.net/{}-bitcoins-online/RUB/{}/.json'.format(direction, online_provider))
+        all_ads = requests.get('https://localbitcoins.net/{}-bitcoins-online/{}/{}/.json'.format(direction, currency, online_provider))
         try:
             response_json = all_ads.json()['data']
         except:
@@ -153,7 +153,7 @@ def update_ad_price(filtered_ads, ad):
 
 def rollback_ad_price(ad, price_rollback):
     ad.price_equation -= float(price_rollback)
-    ad.save()
+    ad.save(update_fields=['price_equation'])
 
 
 def fetch_dashboard_open_trades(client):
@@ -217,7 +217,7 @@ def update_dashboard(user):
 
 def update_ad_bot(ad, client):
     start_time = time()
-    all_ads_json = fetch_all_ads_json(ad.direction, ad.online_provider, ad.get_invisible_trade_ids_as_list(), client)
+    all_ads_json = fetch_all_ads_json(ad.direction, ad.currency, ad.online_provider, ad.get_invisible_trade_ids_as_list(), client)
     print("Получил стакан {} за {} секунд".format(ad.ad_id, time() - start_time))
     if ad.is_top_fifteen:
         all_ads_json['data']['ad_list'] = all_ads_json['data']['ad_list'][:15]
@@ -233,29 +233,31 @@ def update_ad_bot(ad, client):
 
 @task
 def update_list_of_all_ads():
-    print('Список всех объявлений: {}'.format(queryset_to_list(Ad.objects.all())))
-    for ad in Ad.objects.all():
-        update_ad.delay(ad)
+    for ad_id in queryset_to_list(Ad.objects.values_list('id')):
+        update_ad.delay(ad_id)
 
 
 @task
-def update_ad(ad):
-    client = LocalBitcoin(ad.user.localuser.hmac_key,
-                          ad.user.localuser.hmac_secret,
-                          ad.user.localuser.proxy)
+def update_ad(id):
+    ad = Ad.objects.get(id=id)
     delay = float(getenv('delay'))*60
     start_time = time()
     while time() - start_time < delay:
         if ad.is_updated:
             print('Начал работать с {}'.format(ad.ad_id))
             ad.current_step = 1
+            ad.save(update_fields=['current_step'])
             while ad.current_step < ad.steps_quantity and time() - start_time < delay:
+                ad = Ad.objects.get(id=id)
+                client = LocalBitcoin(ad.user.localuser.hmac_key,
+                                      ad.user.localuser.hmac_secret,
+                                      ad.user.localuser.proxy)
                 start_time_while = time()
                 old_price = ad.price_equation
                 ad = update_ad_bot(ad, client)
                 if not float(ad.price_equation) == float(old_price):
                     ad.current_step += 1
-                ad.save()
+                ad.save(update_fields=['current_step', 'price_equation', 'current_amount', 'current_ad_position'])
                 print("Закончил обновлять {} за {} секунд" .format(ad.ad_id, time() - start_time_while))
             print('{} пошел спать'.format(ad.ad_id))
             rollback_ad_price(ad, ad.price_rollback)
