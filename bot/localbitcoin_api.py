@@ -135,11 +135,9 @@ if __name__ == '__main__':
         'require_identification': False
     }
     #print(client.get_ads([234523, 223444, 565564, 397416]))
-    import time
-    for i in range(10):
-        st = time.time()
-        print(client.sendRequest(endpoint='/sell-bitcoins-online/RUB/qiwi/.json',
-                                  params='',
-                                  method='get'))
-        time.sleep(0.1)
-        print('{}'.format(time.time() - st))
+    pm = (client.sendRequest(endpoint='/api/currencies/',
+                              params='',
+                              method='get'))
+    print(pm)
+    for method in pm['data']['currencies']:
+        print(method)

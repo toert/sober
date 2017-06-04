@@ -18,7 +18,7 @@ def edit_ad(ad, client):
         'countrycode': 'RU',
         'currency': ad.currency,
         'account_info': ad.account_info,
-        'bank_name': ad.currency,
+        'bank_name': ad.bank_name,
         'msg': ad.msg,
         'sms_verification_required': False,
         'track_max_amount': False,

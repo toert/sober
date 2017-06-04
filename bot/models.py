@@ -8,7 +8,14 @@ TYPES_OF_AD = (
     ('buy', 'Обьявление о продаже клиенту'),
     ('sell', 'Обьявление о покупке у клиента')
 )
-
+TYPES_OF_PAYMENT_METHOD = (
+    ('qiwi', 'QIWI'),
+    ('transfers-with-specific-bank', 'Перевод через конкретный банк')
+)
+TYPES_OF_CURRENCY = (
+    ('rub', 'Рубль'),
+    ('usd', 'Американский доллар')
+)
 
 class LocalUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -46,8 +53,8 @@ class Ad(models.Model):
     ad_id = models.CharField(max_length=40, db_index=True, verbose_name='ID объявления')
     price_equation = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена', default=0.10)
     direction = models.CharField(max_length=80, choices=TYPES_OF_AD, verbose_name='Тип обьявления')
-    online_provider = models.CharField(max_length=20, verbose_name='Инструмент (QIWI и т.д.)')
-    currency = models.CharField(max_length=3, verbose_name='Валюта')
+    online_provider = models.CharField(max_length=20, choices=TYPES_OF_PAYMENT_METHOD, verbose_name='Инструмент')
+    currency = models.CharField(max_length=3, choices=TYPES_OF_CURRENCY, verbose_name='Валюта')
     bank_name = models.CharField(max_length=80, verbose_name='Имя банка')
     min_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Минимальная цена', default=0.10)
     max_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Максимальная цена', default=0.10)
