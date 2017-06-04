@@ -29,7 +29,7 @@ class CreateBot(ModelForm):
                   'price_limit',
                   'amount_limit',
                   'min_amount_filter',
-                  'ad_creation_time_filter',
+                  'last_online_time',
                   'delta_amount_filter',
                   'phone_number',
                   'step',

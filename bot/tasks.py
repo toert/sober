@@ -97,7 +97,7 @@ def filter_ads_by_login_black_list(all_ads, blacklist):
 
 
 def get_filtered_ads(all_ads, ad):
-    filtered_ads = filter_ads_by_time(all_ads, ad.ad_creation_time_filter)
+    filtered_ads = filter_ads_by_time(all_ads, ad.last_online_time)
     filtered_ads = filter_ads_by_login_black_list(filtered_ads, ad.ignored_logins)
     filtered_ads = filter_ads_by_amount(filtered_ads, ad.min_amount_filter)
     filtered_ads = filter_ads_by_delta_amount(filtered_ads, ad.delta_amount_filter)
