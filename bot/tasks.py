@@ -29,7 +29,7 @@ def edit_ad(ad, client):
         'details-phone_number': ad.phone_number,
         'visible': ad.is_visible
     }
-    return client.sendRequest(endpoint='/api/ad/{}/'.format(ad.ad_id),
+    client.sendRequest(endpoint='/api/ad/{}/'.format(ad.ad_id),
                        params=params,
                        method='post')
 
@@ -239,7 +239,6 @@ def update_list_of_all_ads():
 
 @task
 def update_ad(id):
-    print(id)
     ad = Ad.objects.get(id=id)
     delay = float(getenv('delay'))*60
     start_time = time()
@@ -248,7 +247,7 @@ def update_ad(id):
             print('Начал работать с {}'.format(ad.ad_id))
             ad.current_step = 1
             ad.save(update_fields=['current_step'])
-            while ad.current_step < ad.steps_quantity and time() - start_time < delay:
+            while ad.current_step < ad.steps_quantity and time() - start_time < delay and ad.is_updated:
                 ad = Ad.objects.get(id=id)
                 client = LocalBitcoin(ad.user.localuser.hmac_key,
                                       ad.user.localuser.hmac_secret,
