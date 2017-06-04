@@ -79,6 +79,8 @@ def get_own_ad_current_position(own_ad_id, all_ads):
 
 
 def filter_ads_by_time(all_ads, ad_creation_time_filter):
+    for ad in all_ads:
+        print('{} - {} > {}'.format(int(time()), int(convert_date_to_timestamp(ad['data']['profile']['last_online'])), ad_creation_time_filter))
     return list(filter(lambda ad: int(time()) - int(convert_date_to_timestamp(ad['data']['profile']['last_online'])) < \
                                                                      ad_creation_time_filter, all_ads))
 
