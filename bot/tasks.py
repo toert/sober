@@ -192,7 +192,7 @@ def send_msg(client, trade_contact_id, msg):
 
 
 def queryset_to_list(queryset):
-    return [object for object in queryset]
+    return [object[0] for object in queryset]
 
 
 def update_dashboard(user):
@@ -233,7 +233,7 @@ def update_ad_bot(ad, client):
 
 @task
 def update_list_of_all_ads():
-    for ad_id in list(Ad.objects.values_list('id')):
+    for ad_id in queryset_to_list(Ad.objects.values_list('id')):
         update_ad.delay(ad_id)
 
 
