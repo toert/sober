@@ -13,8 +13,8 @@ TYPES_OF_PAYMENT_METHOD = (
     ('transfers-with-specific-bank', 'Перевод через конкретный банк')
 )
 TYPES_OF_CURRENCY = (
-    ('rub', 'Рубль'),
-    ('usd', 'Американский доллар')
+    ('RUB', 'Рубль'),
+    ('USD', 'Американский доллар')
 )
 
 class LocalUser(models.Model):
