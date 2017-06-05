@@ -92,28 +92,38 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
     <script type="text/javascript">
-
     $( document ).ready(function() {
-       setInterval(function(){
-           $.ajax({
-               url:'/table/' ,
-               type: "get",
-               cache: true,
-               timeout: 30000,
-               dataType: 'html',
-               success: function(data) {
-                   var foo = document.getElementById('MyTable')
+      var jqXHR;
+      function update_table() {
+        jqXHR = $.ajax({
+                 url:'/table/' ,
+                 type: "get",
+                 cache: true,
+                 timeout: 30000,
+                 dataType: 'html',
+                 success: function(data) {
+                     var foo = document.getElementById('MyTable')
 
-                   $('#MyTable').html(data);
-               },
-               error: function(data) {
-                   alert("Got an error dude "+data);
-               }
-           });
-       }, 10000);
+                     $('#MyTable').html(data);
+                 },
+                 error: function(data) {
+                     eblan = 1;
+            }
+          }); 
+        }
+      var interval = setInterval(function(){
+           if ($('input').is(':focus')) {
+                  clearInterval(interval);
+              jqXHR.abort();
+            }
+            else {
+              update_table();
+            };
+    }, 5000);
+       
     });
-
  </script>
+
     <script>
       $(function() {
         $( ".datepicker" ).datepicker({

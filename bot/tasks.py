@@ -59,7 +59,7 @@ def fetch_all_ads_json(direction, currency, online_provider, invisible_trade_ids
             sleep(1 * error_count)
             continue
         if not invisible_trade_ids == []:
-            all_ads['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
+            all_ads.json()['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
         return all_ads.json()
 
 
