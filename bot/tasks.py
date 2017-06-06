@@ -96,6 +96,9 @@ def filter_ads_by_amount(all_ads, min_amount_filter):
 
 
 def filter_ads_by_delta_amount(all_ads, delta_amount_filter):
+    for ad in all_ads:
+        if ad['data']['min_amount'] is not None:
+            ad['data']['min_amount'] = 0
     return list(filter(lambda ad: (int(ad['data']['max_amount_available']) - int(ad['data']['min_amount'])) > \
                                   delta_amount_filter, all_ads))
 
