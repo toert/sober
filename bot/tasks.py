@@ -59,7 +59,7 @@ def fetch_all_ads_json(direction, currency, online_provider, invisible_trade_ids
             sleep(1 * error_count)
             continue
         all_ads = all_ads.json()
-        if not invisible_trade_ids:
+        if invisible_trade_ids:
             all_ads['data']['ad_list'].append(fetch_ads_from_trade_id(invisible_trade_ids, client))
         return all_ads
 
@@ -78,6 +78,13 @@ def get_own_ad_current_position(own_ad_id, all_ads):
     else:
         return -1
 
+
+def get_own_ad_visible_status(own_ad_id, all_ads):
+    own_ad = list(filter(lambda ad: ad['data']['ad_id'] == own_ad_id, all_ads))
+    if own_ad:
+        return own_ad[0]['data']['visible']
+    else:
+        return False
 
 def filter_ads_by_time(all_ads, ad_creation_time_filter):
     return list(filter(lambda ad: int(time()) - int(convert_date_to_timestamp(ad['data']['profile']['last_online'])) \
@@ -223,11 +230,12 @@ def update_ad_bot(ad, client):
     if ad.is_top_fifteen:
         all_ads_json['data']['ad_list'] = all_ads_json['data']['ad_list'][:15]
     ad.current_ad_position = get_own_ad_current_position(ad.ad_id, all_ads_json)
+    ad.is_visible = get_own_ad_visible_status(ad.ad_id, all_ads_json)
     sorted_ads = sort_ads_by_price(all_ads_json, ad.direction)
     filtered_ads = get_filtered_ads(sorted_ads, ad)
     update_ad_price(filtered_ads, ad)
     start_time = time()
-    print(edit_ad(ad, client))
+    edit_ad(ad, client)
     print("Изменил {} за {} секунд".format(ad.ad_id, time() - start_time))
     return ad
 
