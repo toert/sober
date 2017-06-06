@@ -268,16 +268,17 @@ def update_ad(id):
                 start_time_while = time()
                 old_price = ad.price_equation
                 ad = update_ad_bot(ad, client)
-                if not float(ad.price_equation) == float(old_price):
+                if float(ad.price_equation) != float(old_price):
                     ad.current_step += 1
                 ad.save(update_fields=['current_step', 'price_equation', 'current_amount', 'current_ad_position'])
                 print("Закончил обновлять {} за {} секунд" .format(ad.ad_id, time() - start_time_while))
-            print('{} пошел спать'.format(ad.ad_id))
-            rollback_ad_price(ad, ad.price_rollback)
-            edit_ad(ad, client)
-            sleep(ad.rollback_time)
+            if time() - start_time < delay:
+                print('{} пошел спать'.format(ad.ad_id))
+                rollback_ad_price(ad, ad.price_rollback)
+                edit_ad(ad, client)
+                sleep(ad.rollback_time)
         elif time() - start_time < delay:
-            sleep(60)
+            sleep(10)
 
 
 @task
