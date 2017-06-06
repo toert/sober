@@ -81,7 +81,7 @@ class Ad(models.Model):
     is_updated = models.BooleanField(verbose_name='Обновлять ли объявление?', default=False)
 
     current_amount = models.IntegerField(default=1)
-    current_ad_position = models.IntegerField(verbose_name='Текущая позиция', null=True)
+    current_ad_position = models.IntegerField(verbose_name='Текущая позиция', default=1)
     current_step = models.IntegerField(verbose_name='Текущий номер шага', null=True)
 
     class Meta:
