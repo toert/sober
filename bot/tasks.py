@@ -276,7 +276,7 @@ def update_ad(id):
                 print('{} пошел спать'.format(ad.ad_id))
                 rollback_ad_price(ad, ad.price_rollback)
                 edit_ad(ad, client)
-                sleep(ad.rollback_time)
+                sleep(min(ad.rollback_time, time() - start_time + delay - ad.rollback_time))
         elif time() - start_time < delay:
             sleep(10)
 
