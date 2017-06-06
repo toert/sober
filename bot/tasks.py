@@ -80,7 +80,7 @@ def get_own_ad_current_position(own_ad_id, all_ads):
 
 
 def get_own_ad_visible_status(own_ad_id, all_ads):
-    own_ad = list(filter(lambda ad: ad['data']['ad_id'] == int(own_ad_id), all_ads))
+    own_ad = list(filter(lambda ad: int(ad['data']['ad_id']) == int(own_ad_id), all_ads))
     if own_ad:
         return own_ad[0]['data']['visible']
     else:
