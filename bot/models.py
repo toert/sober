@@ -83,6 +83,7 @@ class Ad(models.Model):
     current_amount = models.IntegerField(default=1)
     current_ad_position = models.IntegerField(verbose_name='Текущая позиция', default=1)
     current_step = models.IntegerField(verbose_name='Текущий номер шага', null=True)
+    is_continued = models.BooleanField(verbose_name='Обновлять ли объявление?', default=False)
 
     class Meta:
         verbose_name = 'Обьявление'

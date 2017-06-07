@@ -72,7 +72,7 @@ def change_bot_from_vertical(request, bot_id):
 
 
 def update_table(request):
-    ads = Ad.objects.filter(user=request.user)
+    ads = Ad.objects.filter(user=request.user).order_by('id')
     # ads_and_forms = []
     # if request.method == 'POST':
     #    form = HorizontalForm(request.POST, instance=)

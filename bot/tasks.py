@@ -257,9 +257,10 @@ def update_ad(id):
     while time() - start_time < delay:
         if ad.is_updated:
             print('Начал работать с {}'.format(ad.ad_id))
-            if not 1 < ad.current_step < ad.steps_quantity:
+            if not 1 < ad.current_step < ad.steps_quantity or ad.is_continued:
+                ad.is_continued = True
                 ad.current_step = 1
-            ad.save(update_fields=['current_step'])
+            ad.save(update_fields=['current_step', 'is_continued'])
             while ad.current_step < ad.steps_quantity and time() - start_time < delay and ad.is_updated:
                 ad = Ad.objects.get(id=id)
                 client = LocalBitcoin(ad.user.localuser.hmac_key,
@@ -279,6 +280,10 @@ def update_ad(id):
                 sleep(min(ad.rollback_time, time() - start_time + delay - ad.rollback_time))
         elif time() - start_time < delay:
             sleep(10)
+            ad.is_continued = False
+            ad.save(update_fields=['is_continued'])
+
+
 
 
 @task
