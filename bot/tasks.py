@@ -255,6 +255,7 @@ def update_ad(id):
     delay = float(getenv('delay'))*60
     start_time = time()
     while time() - start_time < delay:
+        ad = Ad.objects.get(id=id)
         if ad.is_updated:
             print('Начал работать с {}'.format(ad.ad_id))
             if not 1 < ad.current_step < ad.steps_quantity or ad.is_continued:
@@ -277,7 +278,7 @@ def update_ad(id):
                 print('{} пошел спать'.format(ad.ad_id))
                 rollback_ad_price(ad, ad.price_rollback)
                 edit_ad(ad, client)
-                sleep(min(ad.rollback_time, time() - start_time + delay - ad.rollback_time))
+                sleep(min(ad.rollback_time, delay + time() - start_time ))
         elif time() - start_time < delay:
             sleep(10)
             ad.is_continued = False
