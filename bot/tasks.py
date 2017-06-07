@@ -251,7 +251,6 @@ def update_list_of_all_ads():
 
 @task
 def update_ad(id):
-    ad = Ad.objects.get(id=id)
     delay = float(getenv('delay'))*60
     start_time = time()
     while time() - start_time < delay:
