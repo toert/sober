@@ -4,21 +4,22 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from .forms import CreateBot, HmacForm, HorizontalForm
 from .models import Ad, LocalUser
+from django.views.decorators.csrf import csrf_exempt
 
 
 @login_required
 def render_dashboard(request):
     ads = list(Ad.objects.filter(user=request.user).order_by('id'))
-    #ads_and_forms = []
+    ads_and_forms = []
     #if request.method == 'POST':
     #    form = HorizontalForm(request.POST, instance=)
     #    if form.is_valid():
     #      form.save()
     #        return HttpResponseRedirect(reverse('render_dashboard'))
     #    print('Fucked up!')
-    #for ad in ads:
-    #    ads_and_forms.append((ad, HorizontalForm(instance=ad)))
-    return render(request, 'index.html', {'ads': ads})
+    for ad in ads:
+        ads_and_forms.append((ad, HorizontalForm(instance=ad)))
+    return render(request, 'index.html', {'ads': ads_and_forms})
 
 
 @login_required
@@ -45,14 +46,22 @@ def set_keys_page(request):
 
 
 @login_required
+@csrf_exempt
 def edit_ad(request, bot_id):
     if request.method == 'POST':
         object = Ad.objects.get(id=bot_id)
         if object.user == request.user:
             form = HorizontalForm(request.POST or None, instance=object)
+            print('Form:', form)
             if form.is_valid():
                 form.save()
                 return HttpResponseRedirect(reverse('render_dashboard'))
+            else:
+                print('Errors', form.errors)
+                return HttpResponseRedirect(reverse('render_dashboard'))
+            print('Fuck')
+        print('Fuck2')
+    print('Fuck3')
 
 
 @login_required
@@ -63,6 +72,7 @@ def change_bot_from_vertical(request, bot_id):
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('render_dashboard'))
+
     if ad_instanse.user == request.user:
         form = CreateBot(request.POST or None, instance=ad_instanse)
         return render(request, 'create.html', {'form': form})
@@ -73,15 +83,15 @@ def change_bot_from_vertical(request, bot_id):
 
 def update_table(request):
     ads = list(Ad.objects.filter(user=request.user).order_by('id'))
-    # ads_and_forms = []
+    ads_and_forms = []
     # if request.method == 'POST':
     #    form = HorizontalForm(request.POST, instance=)
     #    if form.is_valid():
     #      form.save()
     #        return HttpResponseRedirect(reverse('render_dashboard'))
     #    print('Fucked up!')
-    # for ad in ads:
-    #    ads_and_forms.append((ad, HorizontalForm(instance=ad)))
-    return render(request, 'table.html', {'ads': ads})
+    for ad in ads:
+        ads_and_forms.append((ad, HorizontalForm(instance=ad)))
+    return render(request, 'table.html', {'ads': ads_and_forms})
 
 

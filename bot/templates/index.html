@@ -101,6 +101,7 @@
                  cache: true,
                  timeout: 30000,
                  dataType: 'html',
+                 async: false,
                  success: function(data) {
                      var foo = document.getElementById('MyTable')
 
@@ -117,11 +118,14 @@
               jqXHR.abort();
             }
             else {
-              update_table();
+              //update_table();
+              window.location.reload();
+              $("#MyTable").on('click', '.btn-success', function(){$(this).parent('td').siblings('form').submit()})
             };
     }, 5000);
        
     });
+
  </script>
 
     <script>

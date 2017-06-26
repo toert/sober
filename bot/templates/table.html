@@ -17,29 +17,33 @@
           <th>Активн</th>
           <th></th> 
         </tr>
-        {% for ad in ads %}
+        {% for ad, form in ads %}
         <tr {% if not ad.is_updated %}class="gray"
             {% elif ad.direction == 'sell' %}class="green"
             {% elif ad.direction == 'buy' %}class="red"{% endif %}>
-        <form action="/edit/{{ad.id}}" method="post">
-          {% csrf_token %}
+        <form action="/edit/{{ad.id}}" method="post" id="form-{{ad.id}}">
           <td>{{ ad.id }}</td>
           <td>{{ ad.direction }}</td> 
           <td>{{ ad.online_provider }}</td>
           <td>{{ ad.currency }}</td>
-          <td><input type="number" class="fixed_width" name="min_price" value="{{ ad.min_price }}" required=""></td> 
-          <td><input type="number" class="fixed_width" name="max_price" value="{{ ad.max_price }}" required=""></td>
+          <td>{{ form.min_price }}</td> 
+          <td>{{ form.max_price }}</td>
           <td>{{ ad.current_ad_position }}</td>
           <td>{{ ad.price_equation }}</td> 
           <td>{{ ad.current_amount }}</td>
-          <td><input type="number" class="fixed_width" name="step" value="{{ ad.step }}"  required="" id="step"></td>
-          <td><input type="number"  class="fixed_width" name="max_amount" value="{{ ad.max_amount }}"  required=""></td> 
-          <td><input type="number"  class="fixed_width" name="price_limit" value="{{ ad.price_limit }}" step="0.01" required=""></td>
-          <td><input type="number"  class="fixed_width" name="amount_limit" value="{{ ad.amount_limit }}" required=""></td>
+          <td>{{ form.step }}</td>
+          <td>{{ form.max_amount }}</td> 
+          <td>{{ form.price_limit }}</td>
+          <td>{{ form.amount_limit }}</td>
           <td>{{ ad.current_step }}</td> 
-          <td><input type="checkbox"  class="fixed_width" name="is_updated"  {% if ad.is_updated %}checked=""{% endif %}></td>
-          <td><input type="submit" value="√"  class="text-center btn btn-success"/>
-          <a href="ad/{{ ad.id }}" class="btn btn-warning" role="button">&#9998;</a> </td> 
+          <td>{{ form.is_updated}}</td>
+          <td><input type="submit" value="√"  class="text-center btn btn-success" id="{{ad.id}}"/>
+          <a href="ad/{{ ad.id }}" class="btn btn-warning" role="button">&#9998;</a> {% for field in form %}
+    <div class="fieldWrapper">
+        {{ field.errors }}
+
+    </div>
+{% endfor %}</td> 
           </form>
         </tr>
         {% endfor %}
